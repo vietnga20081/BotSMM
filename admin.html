@@ -1,0 +1,1238 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BotSMM Admin v2</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+:root{
+  --bg:#070b14;--bg2:#0c1220;--bg3:#111827;--surface:#151d2e;--surface2:#1c2638;
+  --border:#1e2d45;--border2:#253448;
+  --accent:#3b82f6;--accent2:#2563eb;--accent-dim:rgba(59,130,246,.12);--accent-glow:rgba(59,130,246,.3);
+  --green:#10b981;--green-dim:rgba(16,185,129,.12);
+  --orange:#f59e0b;--orange-dim:rgba(245,158,11,.12);
+  --red:#ef4444;--red-dim:rgba(239,68,68,.12);
+  --purple:#8b5cf6;--purple-dim:rgba(139,92,246,.12);
+  --cyan:#06b6d4;--cyan-dim:rgba(6,182,212,.12);
+  --text:#e2e8f0;--text2:#94a3b8;--text3:#475569;
+  --r:12px;--rs:8px;
+  --f:'Space Grotesk',sans-serif;--fm:'Fira Code',monospace;
+  --sh:0 8px 32px rgba(0,0,0,.5);--shs:0 2px 12px rgba(0,0,0,.3);
+  --tr:all .2s cubic-bezier(.4,0,.2,1);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--f);background:var(--bg);color:var(--text);min-height:100vh;font-size:14px;-webkit-font-smoothing:antialiased}
+::-webkit-scrollbar{width:4px;height:4px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+
+#loginScreen{display:flex;align-items:center;justify-content:center;min-height:100vh;background:radial-gradient(ellipse 100% 80% at 50% -10%,rgba(59,130,246,.15),transparent 60%);position:relative}
+.lg-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(59,130,246,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(59,130,246,.04) 1px,transparent 1px);background-size:48px 48px}
+.lg-card{position:relative;z-index:1;background:var(--surface);border:1px solid var(--border2);border-radius:20px;padding:48px 44px;width:440px;max-width:92vw;box-shadow:0 0 80px rgba(59,130,246,.08),var(--sh)}
+.lg-brand{display:flex;align-items:center;gap:12px;margin-bottom:6px}
+.lg-icon{width:40px;height:40px;background:var(--accent);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;box-shadow:0 0 20px rgba(59,130,246,.4)}
+.lg-name{font-size:24px;font-weight:700;letter-spacing:-.5px}.lg-name span{color:var(--accent)}
+.lg-sub{color:var(--text3);font-size:13px;margin-bottom:36px;margin-left:52px}
+.lg-lbl{display:block;font-size:11px;font-weight:600;color:var(--text3);letter-spacing:.8px;text-transform:uppercase;margin-bottom:7px}
+.lg-inp{width:100%;padding:13px 16px;background:var(--bg2);border:1.5px solid var(--border);border-radius:var(--rs);color:var(--text);font-family:var(--fm);font-size:14px;outline:none;transition:var(--tr);margin-bottom:18px}
+.lg-inp:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-dim)}
+.lg-btn{width:100%;padding:14px;background:var(--accent);color:#fff;font-family:var(--f);font-size:15px;font-weight:600;border:none;border-radius:var(--rs);cursor:pointer;transition:var(--tr)}
+.lg-btn:hover{background:var(--accent2);box-shadow:0 0 24px var(--accent-glow);transform:translateY(-1px)}
+.lg-btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
+.lg-err{color:var(--red);font-size:13px;margin-top:12px;display:none;padding:10px 14px;background:var(--red-dim);border-radius:var(--rs)}
+
+#appShell{display:none;height:100vh;overflow:hidden}
+
+.sidebar{position:fixed;left:0;top:0;height:100%;width:240px;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;z-index:100;transition:transform .25s ease}
+.sb-head{padding:20px 20px 14px;border-bottom:1px solid var(--border)}
+.sb-brand{display:flex;align-items:center;gap:10px;margin-bottom:2px}
+.sb-icon{width:32px;height:32px;background:var(--accent);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
+.sb-name{font-size:16px;font-weight:700}.sb-name span{color:var(--accent)}
+.sb-ver{font-size:10px;color:var(--text3);font-family:var(--fm);margin-left:42px}
+.sb-status{display:flex;align-items:center;gap:6px;padding:8px 12px;margin-top:10px;background:var(--bg3);border-radius:var(--rs);border:1px solid var(--border)}
+.st-dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:stP 2s infinite;flex-shrink:0}
+.st-dot.warn{background:var(--orange)}.st-dot.error{background:var(--red);animation:none}
+@keyframes stP{0%,100%{opacity:1}50%{opacity:.4}}
+.st-txt{font-size:11px;color:var(--text2);font-family:var(--fm)}
+.nav{flex:1;overflow-y:auto;padding:12px}
+.nav-sec{padding:12px 8px 5px;font-size:10px;font-weight:600;color:var(--text3);letter-spacing:1.2px;text-transform:uppercase}
+.ni{display:flex;align-items:center;gap:10px;padding:9px 12px;cursor:pointer;color:var(--text2);font-size:13px;font-weight:500;transition:var(--tr);border-radius:var(--rs);margin-bottom:1px;position:relative;user-select:none}
+.ni:hover{background:var(--surface);color:var(--text)}
+.ni.active{background:var(--accent-dim);color:var(--accent)}
+.ni.active::before{content:'';position:absolute;left:0;top:50%;transform:translateY(-50%);width:3px;height:60%;background:var(--accent);border-radius:0 2px 2px 0}
+.ni svg{width:16px;height:16px;flex-shrink:0}
+.nbadge{margin-left:auto;background:var(--red);color:#fff;font-size:10px;font-weight:700;padding:2px 6px;border-radius:20px;font-family:var(--fm)}
+.sb-foot{padding:14px 16px;border-top:1px solid var(--border)}
+.sb-user{display:flex;align-items:center;gap:10px}
+.sb-av{width:34px;height:34px;border-radius:10px;background:var(--accent-dim);border:1.5px solid var(--accent);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:var(--accent);flex-shrink:0}
+.sb-ui{flex:1;overflow:hidden}
+.sb-un{font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sb-ur{font-size:10px;color:var(--accent);font-family:var(--fm)}
+.lo-btn{padding:6px;background:none;border:1px solid var(--border);border-radius:var(--rs);color:var(--text3);cursor:pointer;transition:var(--tr);flex-shrink:0}
+.lo-btn:hover{border-color:var(--red);color:var(--red)}
+
+.main{margin-left:240px;height:100vh;overflow-y:auto;display:flex;flex-direction:column}
+.topbar{position:sticky;top:0;z-index:50;background:rgba(7,11,20,.88);backdrop-filter:blur(16px);border-bottom:1px solid var(--border);padding:12px 28px;display:flex;align-items:center;gap:16px}
+.tb-left{display:flex;align-items:center;gap:12px;flex:1}
+.hbg{display:none;padding:6px;cursor:pointer;background:none;border:none;color:var(--text2)}
+.tb-title{font-size:17px;font-weight:700}.tb-bc{font-size:12px;color:var(--text3);font-family:var(--fm)}
+.tb-right{display:flex;align-items:center;gap:12px}
+.tb-time{font-family:var(--fm);font-size:11px;color:var(--text3)}
+.tb-health{display:flex;align-items:center;gap:6px;padding:5px 10px;border-radius:20px;font-size:11px;cursor:pointer;transition:var(--tr);background:var(--green-dim);color:var(--green);border:1px solid rgba(16,185,129,.2)}
+.tb-health.warn{background:var(--orange-dim);color:var(--orange);border-color:rgba(245,158,11,.2)}
+.tb-health.error{background:var(--red-dim);color:var(--red);border-color:rgba(239,68,68,.2)}
+.th-dot{width:6px;height:6px;border-radius:50%;background:currentColor}
+
+.content{flex:1;padding:24px 28px;overflow-x:hidden}
+.section{display:none;animation:fS .2s ease}.section.active{display:block}
+@keyframes fS{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+.ph{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:24px;flex-wrap:wrap;gap:12px}
+.ph-t{font-size:22px;font-weight:700;margin-bottom:3px}.ph-s{font-size:12px;color:var(--text3)}
+.pa{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+
+.sg{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:14px;margin-bottom:24px}
+.sc{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:18px 20px;transition:var(--tr);position:relative;overflow:hidden}
+.sc::after{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,.02),transparent 50%);pointer-events:none}
+.sc:hover{border-color:var(--border2);transform:translateY(-2px);box-shadow:var(--shs)}
+.sc-hd{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px}
+.sc-ic{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px}
+.sc-tr{font-size:11px;font-weight:600;font-family:var(--fm)}
+.sc-tr.up{color:var(--green)}.sc-tr.dn{color:var(--red)}.sc-tr.nt{color:var(--text3)}
+.sc-val{font-size:22px;font-weight:700;margin-bottom:3px;letter-spacing:-.5px;line-height:1}
+.sc-lbl{font-size:12px;color:var(--text3);font-weight:500}
+.sc-sub{font-size:11px;color:var(--text3);margin-top:6px;padding-top:6px;border-top:1px solid var(--border);font-family:var(--fm)}
+.s-bl .sc-ic{background:var(--accent-dim)}.s-gr .sc-ic{background:var(--green-dim)}
+.s-or .sc-ic{background:var(--orange-dim)}.s-pu .sc-ic{background:var(--purple-dim)}
+.s-cy .sc-ic{background:var(--cyan-dim)}
+
+.cg{display:grid;grid-template-columns:2fr 1fr;gap:16px;margin-bottom:24px}
+.cc{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:20px}
+.ch{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+.ct{font-size:14px;font-weight:600}.cs{font-size:11px;color:var(--text3);margin-top:2px}
+.ctabs{display:flex;gap:2px;background:var(--bg2);padding:3px;border-radius:var(--rs)}
+.ctab{padding:5px 12px;border-radius:6px;font-size:11px;font-weight:500;cursor:pointer;transition:var(--tr);color:var(--text3)}
+.ctab.active{background:var(--surface2);color:var(--text)}
+
+.tc{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;margin-bottom:20px}
+.tc-hd{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px}
+.tc-tt{font-size:14px;font-weight:600}
+.tr-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse}
+th{padding:10px 14px;font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;text-align:left;background:var(--bg2);border-bottom:1px solid var(--border);white-space:nowrap}
+td{padding:11px 14px;border-bottom:1px solid rgba(30,45,69,.5);font-size:13px;vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:rgba(59,130,246,.03)}
+.lr td,.er td{text-align:center;padding:40px;color:var(--text3)}
+
+.fb{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+.fi,.fs{background:var(--surface);border:1px solid var(--border);color:var(--text);border-radius:var(--rs);padding:8px 12px;font-size:13px;outline:none;transition:var(--tr);font-family:var(--f)}
+.fi{min-width:200px}.fi:focus,.fs:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-dim)}
+.fs option{background:var(--surface)}.fi::placeholder{color:var(--text3)}
+
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:var(--rs);font-size:13px;font-weight:500;cursor:pointer;border:1px solid transparent;transition:var(--tr);white-space:nowrap;font-family:var(--f)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn-p{background:var(--accent);color:#fff;border-color:var(--accent)}.btn-p:hover:not(:disabled){background:var(--accent2);box-shadow:0 0 16px var(--accent-glow)}
+.btn-g{background:transparent;color:var(--text2);border-color:var(--border)}.btn-g:hover:not(:disabled){color:var(--text);border-color:var(--border2);background:var(--surface)}
+.btn-d{background:var(--red-dim);color:var(--red);border-color:rgba(239,68,68,.2)}.btn-d:hover:not(:disabled){background:var(--red);color:#fff;border-color:var(--red)}
+.btn-s{background:var(--surface2);color:var(--text2);border-color:var(--border2)}.btn-s:hover:not(:disabled){background:var(--bg3);color:var(--text);border-color:var(--accent)}
+.btn-ok{background:var(--green);color:#fff}.btn-ok:hover:not(:disabled){opacity:.85}
+.btn-ex{background:var(--green-dim);color:var(--green);border-color:rgba(16,185,129,.2)}.btn-ex:hover{background:var(--green);color:#fff}
+.btn-bc{background:var(--purple-dim);color:var(--purple);border-color:rgba(139,92,246,.2)}.btn-bc:hover{background:var(--purple);color:#fff}
+.sm{padding:5px 10px;font-size:12px}
+
+.badge{display:inline-flex;align-items:center;padding:3px 8px;border-radius:20px;font-size:11px;font-weight:600;font-family:var(--fm);white-space:nowrap}
+.b-ok{background:var(--green-dim);color:var(--green)}.b-ng{background:var(--red-dim);color:var(--red)}
+.b-wa{background:var(--orange-dim);color:var(--orange)}.b-in{background:var(--accent-dim);color:var(--accent)}
+.b-pu{background:var(--purple-dim);color:var(--purple)}.b-se{background:var(--bg3);color:var(--text3);border:1px solid var(--border)}
+
+.tgl{position:relative;display:inline-block;width:36px;height:20px;cursor:pointer}
+.tgl input{opacity:0;width:0;height:0;position:absolute}
+.tsl{position:absolute;inset:0;background:var(--bg3);border:1px solid var(--border2);border-radius:20px;transition:var(--tr)}
+.tsl::before{content:'';position:absolute;width:14px;height:14px;left:2px;top:2px;background:var(--text3);border-radius:50%;transition:var(--tr)}
+.tgl input:checked+.tsl{background:var(--accent);border-color:var(--accent)}
+.tgl input:checked+.tsl::before{transform:translateX(16px);background:#fff}
+
+.mo{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:1000;display:none;align-items:center;justify-content:center;backdrop-filter:blur(4px)}
+.mo.open{display:flex}
+.md{background:var(--surface);border:1px solid var(--border2);border-radius:16px;width:520px;max-width:92vw;max-height:85vh;overflow:hidden;display:flex;flex-direction:column;animation:sU .2s ease}
+.md-xl{width:900px}
+@keyframes sU{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:none}}
+.md-hd{padding:20px 24px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.md-t{font-size:16px;font-weight:700}
+.md-x{padding:6px;background:none;border:none;color:var(--text3);cursor:pointer;border-radius:var(--rs);transition:var(--tr);font-size:16px}
+.md-x:hover{color:var(--text);background:var(--surface2)}
+.md-b{padding:20px 24px;overflow-y:auto;flex:1}
+.md-f{padding:16px 24px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px;flex-shrink:0}
+
+.fl{margin-bottom:16px}
+.fl2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.flbl{display:block;font-size:11px;font-weight:600;color:var(--text3);letter-spacing:.6px;text-transform:uppercase;margin-bottom:7px}
+.finp,.fsel,.fta{width:100%;padding:10px 14px;background:var(--bg2);border:1.5px solid var(--border);border-radius:var(--rs);color:var(--text);font-family:var(--f);font-size:13px;outline:none;transition:var(--tr)}
+.fta{resize:vertical;min-height:100px}
+.finp:focus,.fsel:focus,.fta:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-dim)}
+.finp::placeholder,.fta::placeholder{color:var(--text3)}
+.fsel option{background:var(--bg2)}.fhint{font-size:11px;color:var(--text3);margin-top:5px}
+.fgl{font-size:13px;font-weight:600;color:var(--text);margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--border)}
+
+.pag{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-top:1px solid var(--border);flex-wrap:wrap;gap:10px}
+.pi{font-size:12px;color:var(--text3);font-family:var(--fm)}
+.pb{display:flex;gap:4px}
+.pgb{width:32px;height:32px;border-radius:var(--rs);border:1px solid var(--border);background:var(--surface2);color:var(--text2);cursor:pointer;font-size:12px;font-weight:600;transition:var(--tr);display:inline-flex;align-items:center;justify-content:center;font-family:var(--fm)}
+.pgb:hover:not(:disabled){border-color:var(--accent);color:var(--accent)}
+.pgb.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+.pgb:disabled{opacity:.3;cursor:not-allowed}
+
+#toast-c{position:fixed;bottom:24px;right:24px;z-index:9999;display:flex;flex-direction:column;gap:8px}
+.toast{display:flex;align-items:center;gap:10px;padding:13px 18px;background:var(--surface2);border:1px solid var(--border2);border-radius:var(--rs);font-size:13px;box-shadow:var(--sh);animation:tI .25s ease;max-width:380px}
+.toast.success{border-color:rgba(16,185,129,.3);background:rgba(16,185,129,.08)}
+.toast.error{border-color:rgba(239,68,68,.3);background:rgba(239,68,68,.08)}
+.toast.warning{border-color:rgba(245,158,11,.3);background:rgba(245,158,11,.08)}
+.toast.removing{animation:tO .25s ease forwards}
+@keyframes tI{from{opacity:0;transform:translateX(100%)}to{opacity:1;transform:none}}
+@keyframes tO{to{opacity:0;transform:translateX(100%)}}
+
+.sp{width:28px;height:28px;border:2px solid var(--border2);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;margin:auto}
+.sp-sm{width:14px;height:14px;border-width:2px}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+.mn{font-family:var(--fm);font-size:12px}.vnd{font-family:var(--fm);font-size:12px;color:var(--green)}
+.tm{color:var(--text3)}.trunc{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fc{display:flex;align-items:center;justify-content:center}
+
+.ig{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px}
+.roi{display:flex;align-items:center;gap:12px;padding:9px 0;border-bottom:1px solid rgba(30,45,69,.4)}
+.roi:last-child{border-bottom:none}
+.rb{font-family:var(--fm);font-size:11px;font-weight:700;color:var(--accent);background:var(--accent-dim);padding:3px 7px;border-radius:6px;flex-shrink:0}
+.ri{flex:1;overflow:hidden}.rin{font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.riu{font-size:11px;color:var(--text3)}
+.rc{font-family:var(--fm);font-size:12px;color:var(--green);font-weight:600;flex-shrink:0}
+
+.tui{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid rgba(30,45,69,.4)}.tui:last-child{border-bottom:none}
+.tur{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0}
+.r1{background:rgba(245,158,11,.2);color:var(--orange)}.r2{background:rgba(148,163,184,.2);color:var(--text2)}.r3{background:rgba(205,127,50,.15);color:#cd7f32}.r0{background:var(--bg3);color:var(--text3);font-size:10px}
+.tuf{flex:1;overflow:hidden}.tun{font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:500}.tuod{font-size:11px;color:var(--text3)}
+.tus{font-family:var(--fm);font-size:11px;color:var(--green);flex-shrink:0;font-weight:600}
+
+.hb{display:flex;align-items:flex-end;gap:2px;height:60px;padding:4px 0}
+.hbar{flex:1;background:var(--accent-dim);border-radius:2px 2px 0 0;transition:var(--tr);cursor:default;min-height:2px}.hbar:hover{background:var(--accent)}
+
+.hg{display:grid;grid-template-columns:repeat(auto-fill,minmax(155px,1fr));gap:12px}
+.hi{background:var(--bg2);border:1px solid var(--border);border-radius:var(--rs);padding:14px}
+.hil{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;font-weight:600;margin-bottom:6px}
+.hiv{font-size:15px;font-weight:700;font-family:var(--fm)}.his{font-size:11px;color:var(--text3);margin-top:3px}
+.hok{color:var(--green)!important}.hwn{color:var(--orange)!important}.her{color:var(--red)!important}
+
+.btg{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px}
+.bto{border:1.5px solid var(--border);border-radius:var(--rs);padding:10px 14px;cursor:pointer;transition:var(--tr);display:flex;align-items:center;gap:8px}
+.bto:hover{border-color:var(--border2);background:var(--surface2)}.bto.sel{border-color:var(--accent);background:var(--accent-dim)}
+.bto input{display:none}
+
+.kg{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:12px;margin-bottom:24px}
+.kc{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:16px}
+.kl{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;font-weight:600;margin-bottom:8px}
+.kv{font-size:24px;font-weight:700;letter-spacing:-.5px}.ku{font-size:13px;color:var(--text3);margin-left:3px}
+
+.ss{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:20px 24px;margin-bottom:16px}
+.ss-t{font-size:14px;font-weight:700;margin-bottom:16px;display:flex;align-items:center;gap:8px}
+.ssg{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+
+.udh{display:flex;align-items:center;gap:16px;padding:20px;background:var(--bg2);border-radius:var(--r);margin-bottom:20px;border:1px solid var(--border)}
+.uda{width:56px;height:56px;border-radius:14px;background:var(--accent-dim);border:2px solid var(--accent);display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;color:var(--accent);flex-shrink:0}
+.udn{font-size:18px;font-weight:700}.udm{font-size:12px;color:var(--text3);margin-top:3px;font-family:var(--fm)}
+.uds{display:flex;gap:20px;margin-top:10px}
+.udst{text-align:center}.udsv{font-size:16px;font-weight:700;font-family:var(--fm)}.udsl{font-size:10px;color:var(--text3);text-transform:uppercase}
+
+@media(max-width:768px){
+  .sidebar{transform:translateX(-100%)}.sidebar.open{transform:translateX(0)}
+  .main{margin-left:0}.hbg{display:flex}.content{padding:16px}.topbar{padding:12px 16px}
+  .sg{grid-template-columns:repeat(2,1fr)}.cg{grid-template-columns:1fr}.ig{grid-template-columns:1fr}
+  .fl2{grid-template-columns:1fr}.ssg{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<div id="toast-c"></div>
+
+<div id="loginScreen">
+  <div class="lg-grid"></div>
+  <div class="lg-card">
+    <div class="lg-brand"><div class="lg-icon">🤖</div><div class="lg-name">Bot<span>SMM</span></div></div>
+    <div class="lg-sub">Admin Dashboard v2.0</div>
+    <label class="lg-lbl">Tên đăng nhập</label>
+    <input class="lg-inp" id="lgU" type="text" placeholder="admin" autocomplete="username">
+    <label class="lg-lbl">Mật khẩu</label>
+    <input class="lg-inp" id="lgP" type="password" placeholder="••••••••" autocomplete="current-password">
+    <button class="lg-btn" id="lgB" onclick="doLogin()">Đăng nhập</button>
+    <div class="lg-err" id="lgE"></div>
+  </div>
+</div>
+
+<div id="appShell">
+  <nav class="sidebar" id="sidebar">
+    <div class="sb-head">
+      <div class="sb-brand"><div class="sb-icon">🤖</div><div class="sb-name">Bot<span>SMM</span></div></div>
+      <div class="sb-ver">v2.0 — Admin Panel</div>
+      <div class="sb-status"><div class="st-dot" id="stDot"></div><div class="st-txt" id="stTxt">Connecting…</div></div>
+    </div>
+    <div class="nav">
+      <div class="nav-sec">Tổng quan</div>
+      <div class="ni active" onclick="nav('dashboard')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>Dashboard</div>
+      <div class="ni" onclick="nav('analytics')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Analytics</div>
+      <div class="nav-sec">Quản lý</div>
+      <div class="ni" onclick="nav('orders')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><line x1="9" y1="12" x2="15" y2="12"/></svg>Đơn hàng<span class="nbadge" id="pendBadge" style="display:none">0</span></div>
+      <div class="ni" onclick="nav('users')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>Người dùng</div>
+      <div class="ni" onclick="nav('services')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 010 14.14M4.93 4.93a10 10 0 000 14.14"/></svg>Dịch vụ</div>
+      <div class="ni" onclick="nav('providers')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>Providers</div>
+      <div class="ni" onclick="nav('transactions')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>Giao dịch</div>
+      <div class="ni" onclick="nav('coupons')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 12v10H4V12"/><path d="M22 7H2v5h20V7z"/><path d="M12 22V7"/></svg>Coupons</div>
+      <div class="nav-sec">Công cụ</div>
+      <div class="ni" onclick="nav('broadcast')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>Broadcast</div>
+      <div class="ni" onclick="nav('settings')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>Cài đặt</div>
+    </div>
+    <div class="sb-foot">
+      <div class="sb-user">
+        <div class="sb-av">A</div>
+        <div class="sb-ui"><div class="sb-un">Administrator</div><div class="sb-ur">super_admin</div></div>
+        <button class="lo-btn" onclick="doLogout()" title="Đăng xuất"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></button>
+      </div>
+    </div>
+  </nav>
+
+  <div class="main">
+    <div class="topbar">
+      <div class="tb-left">
+        <button class="hbg" onclick="toggleSidebar()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
+        <div><div class="tb-title" id="tbTitle">Dashboard</div><div class="tb-bc" id="tbBC">BotSMM / Dashboard</div></div>
+      </div>
+      <div class="tb-right">
+        <div class="tb-health" id="tbHealth" onclick="nav('settings')"><div class="th-dot"></div><span>System</span></div>
+        <div class="tb-time" id="tbTime"></div>
+      </div>
+    </div>
+    <div class="content">
+
+<!-- DASHBOARD -->
+<div class="section active" id="s-dashboard">
+  <div class="ph"><div><div class="ph-t">Dashboard</div><div class="ph-s">Tổng quan hệ thống realtime</div></div><div class="pa"><button class="btn btn-g sm" onclick="loadDashboard()">↻ Làm mới</button></div></div>
+  <div class="sg" id="statsGrid">
+    <div class="sc s-bl"><div class="fc" style="height:80px"><div class="sp"></div></div></div>
+    <div class="sc s-gr"><div class="fc" style="height:80px"><div class="sp"></div></div></div>
+    <div class="sc s-or"><div class="fc" style="height:80px"><div class="sp"></div></div></div>
+    <div class="sc s-pu"><div class="fc" style="height:80px"><div class="sp"></div></div></div>
+    <div class="sc s-cy"><div class="fc" style="height:80px"><div class="sp"></div></div></div>
+    <div class="sc s-gr"><div class="fc" style="height:80px"><div class="sp"></div></div></div>
+  </div>
+  <div class="cg">
+    <div class="cc"><div class="ch"><div><div class="ct">Doanh thu 30 ngày</div><div class="cs">VND — trừ đơn hủy</div></div><div class="ctabs"><div class="ctab active" onclick="switchRevView('revenue',this)">Doanh thu</div><div class="ctab" onclick="switchRevView('orders',this)">Đơn hàng</div></div></div><canvas id="revChart" height="200"></canvas></div>
+    <div class="cc"><div class="ch"><div class="ct">Trạng thái đơn</div></div><canvas id="statChart" height="200"></canvas></div>
+  </div>
+  <div class="ig">
+    <div class="tc"><div class="tc-hd"><div class="tc-tt">⚡ Đơn gần đây</div><button class="btn btn-g sm" onclick="nav('orders')">Xem tất cả →</button></div><div style="padding:4px 16px 12px" id="recentOL"><div class="fc" style="height:80px"><div class="sp"></div></div></div></div>
+    <div class="tc"><div class="tc-hd"><div class="tc-tt">🏆 Top khách hàng</div><button class="btn btn-g sm" onclick="nav('users')">Xem tất cả →</button></div><div style="padding:4px 16px 12px" id="topUL"><div class="fc" style="height:80px"><div class="sp"></div></div></div></div>
+  </div>
+  <div class="cg">
+    <div class="tc"><div class="tc-hd"><div class="tc-tt">🔥 Top dịch vụ theo doanh thu</div></div><div id="topSL" style="padding:8px 16px 12px"></div></div>
+    <div class="cc"><div class="ch"><div class="ct">Đơn theo giờ hôm nay</div></div><div class="hb" id="hrBars"></div><div style="display:flex;justify-content:space-between;margin-top:4px;font-size:9px;color:var(--text3);font-family:var(--fm)"><span>0h</span><span>6h</span><span>12h</span><span>18h</span><span>23h</span></div></div>
+  </div>
+</div>
+
+<!-- ANALYTICS -->
+<div class="section" id="s-analytics">
+  <div class="ph">
+    <div><div class="ph-t">Analytics & Lợi nhuận</div><div class="ph-s">Doanh thu · Chi phí · Lợi nhuận theo kỳ</div></div>
+    <div class="pa">
+      <select class="fs" id="anPeriod" onchange="loadAnalytics()"><option value="7d">7 ngày</option><option value="30d">30 ngày</option><option value="90d">90 ngày</option></select>
+    </div>
+  </div>
+
+  <!-- KPI cards -->
+  <div class="kg" id="anKpi" style="grid-template-columns:repeat(auto-fill,minmax(150px,1fr))">
+    <div class="kc"><div class="fc" style="height:60px"><div class="sp sp-sm"></div></div></div>
+    <div class="kc"><div class="fc" style="height:60px"><div class="sp sp-sm"></div></div></div>
+    <div class="kc"><div class="fc" style="height:60px"><div class="sp sp-sm"></div></div></div>
+    <div class="kc"><div class="fc" style="height:60px"><div class="sp sp-sm"></div></div></div>
+    <div class="kc"><div class="fc" style="height:60px"><div class="sp sp-sm"></div></div></div>
+    <div class="kc"><div class="fc" style="height:60px"><div class="sp sp-sm"></div></div></div>
+  </div>
+
+  <!-- Charts row 1: profit chart + platform donut -->
+  <div class="cg">
+    <div class="cc">
+      <div class="ch">
+        <div><div class="ct">Doanh thu · Chi phí · Lợi nhuận</div><div class="cs" id="anChartSub"></div></div>
+        <div class="ctabs">
+          <div class="ctab active" onclick="switchAnView('profit',this)">Lợi nhuận</div>
+          <div class="ctab" onclick="switchAnView('revenue',this)">Doanh thu</div>
+          <div class="ctab" onclick="switchAnView('orders',this)">Đơn hàng</div>
+        </div>
+      </div>
+      <canvas id="anMainChart" height="200"></canvas>
+    </div>
+    <div class="cc">
+      <div class="ch"><div class="ct">Lợi nhuận theo nền tảng</div></div>
+      <canvas id="pfChart" height="200"></canvas>
+      <div id="pfTable" style="margin-top:12px"></div>
+    </div>
+  </div>
+
+  <!-- Charts row 2: user growth + top services by profit -->
+  <div class="cg">
+    <div class="cc"><div class="ch"><div class="ct">Tăng trưởng người dùng mới</div></div><canvas id="ugChart" height="200"></canvas></div>
+    <div class="tc">
+      <div class="tc-hd"><div class="tc-tt">🏆 Top dịch vụ theo lợi nhuận</div></div>
+      <div class="tr-wrap">
+        <table><thead><tr><th>#</th><th>Dịch vụ</th><th>Đơn</th><th>Doanh thu</th><th>Chi phí</th><th>Lợi nhuận</th><th>Margin</th></tr></thead>
+        <tbody id="anTopProfit"><tr class="lr"><td colspan="7"><div class="sp"></div></td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- All-time summary -->
+  <div class="ss" id="anAllTime" style="display:none">
+    <div class="ss-t">📊 Tổng hợp all-time</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px" id="anAllTimeGrid"></div>
+  </div>
+</div>
+
+<!-- ORDERS -->
+<div class="section" id="s-orders">
+  <div class="ph"><div><div class="ph-t">Đơn hàng</div><div class="ph-s">Quản lý và theo dõi đơn hàng</div></div><div class="pa"><button class="btn btn-ex sm" onclick="exportCSV('orders')">↓ Export CSV</button></div></div>
+  <div class="fb">
+    <input class="fi" id="ordSrch" placeholder="🔍 Tìm theo link..." oninput="dbc.orders()" style="min-width:180px">
+    <select class="fs" id="ordStat" onchange="loadOrders(1)"><option value="">Tất cả trạng thái</option><option>Pending</option><option>Processing</option><option>In progress</option><option>Completed</option><option>Partial</option><option>Canceled</option><option>Failed</option></select>
+    <input class="fi" id="ordFrom" type="date" onchange="loadOrders(1)" style="min-width:130px">
+    <input class="fi" id="ordTo" type="date" onchange="loadOrders(1)" style="min-width:130px">
+    <button class="btn btn-g sm" onclick="clearOrdF()">✕ Xóa lọc</button>
+  </div>
+  <div class="tc"><div class="tr-wrap"><table><thead><tr><th>ID</th><th>User</th><th>Dịch vụ</th><th>Link</th><th>SL</th><th>Chi phí</th><th>Trạng thái</th><th>Ngày tạo</th><th>Hành động</th></tr></thead><tbody id="ordTb"><tr class="lr"><td colspan="9"><div class="sp"></div></td></tr></tbody></table></div><div class="pag" id="ordPag"></div></div>
+</div>
+
+<!-- USERS -->
+<div class="section" id="s-users">
+  <div class="ph"><div><div class="ph-t">Người dùng</div><div class="ph-s">Quản lý tài khoản và phân quyền</div></div><div class="pa"><button class="btn btn-ex sm" onclick="exportCSV('users')">↓ Export CSV</button></div></div>
+  <div class="fb">
+    <input class="fi" id="usrSrch" placeholder="🔍 Tìm username, tên..." oninput="dbc.users()" style="min-width:200px">
+    <select class="fs" id="usrRole" onchange="loadUsers(1)"><option value="">Tất cả role</option><option value="user">User</option><option value="reseller">Reseller</option><option value="admin">Admin</option></select>
+    <select class="fs" id="usrBan" onchange="loadUsers(1)"><option value="">Tất cả</option><option value="false">Hoạt động</option><option value="true">Bị cấm</option></select>
+    <select class="fs" id="usrSort" onchange="loadUsers(1)"><option value="created_at">Mới nhất</option><option value="total_spent">Chi tiêu cao</option><option value="total_orders">Đơn nhiều</option><option value="balance">Số dư cao</option></select>
+  </div>
+  <div class="tc"><div class="tr-wrap"><table><thead><tr><th>ID</th><th>Tài khoản</th><th>Tên</th><th>Số dư</th><th>Đã chi</th><th>Đơn</th><th>Role</th><th>Trạng thái</th><th>Ngày tham gia</th><th>Hành động</th></tr></thead><tbody id="usrTb"><tr class="lr"><td colspan="10"><div class="sp"></div></td></tr></tbody></table></div><div class="pag" id="usrPag"></div></div>
+</div>
+
+<!-- SERVICES -->
+<div class="section" id="s-services">
+  <div class="ph"><div><div class="ph-t">Dịch vụ</div><div class="ph-s">Quản lý bảng giá và trạng thái</div></div><div class="pa"><button class="btn btn-s sm" onclick="openBulkMo()">Bulk Update</button><button class="btn btn-p sm" id="syncBtn" onclick="syncAll(event)">↻ Sync tất cả</button></div></div>
+  <div class="fb">
+    <input class="fi" id="svcSrch" placeholder="🔍 Tìm tên dịch vụ..." oninput="dbc.services()" style="min-width:220px">
+    <select class="fs" id="svcPlatf" onchange="loadServices(1)"><option value="">Tất cả Platform</option></select>
+    <select class="fs" id="svcAct" onchange="loadServices(1)"><option value="">Tất cả</option><option value="true">Đang bật</option><option value="false">Đang tắt</option></select>
+  </div>
+  <div class="tc"><div class="tr-wrap"><table><thead><tr><th>ID</th><th>Platform</th><th>Tên / Danh mục</th><th>Loại</th><th>Giá gốc/1k</th><th>Profit%</th><th>Giá bán/1k</th><th>Min–Max</th><th>Bật</th><th></th></tr></thead><tbody id="svcTb"><tr class="lr"><td colspan="10"><div class="sp"></div></td></tr></tbody></table></div><div class="pag" id="svcPag"></div></div>
+</div>
+
+<!-- PROVIDERS -->
+<div class="section" id="s-providers">
+  <div class="ph"><div><div class="ph-t">Providers</div><div class="ph-s">Quản lý kết nối nhà cung cấp SMM</div></div><div class="pa"><button class="btn btn-p sm" onclick="openPvMo()">+ Thêm Provider</button></div></div>
+
+  <!-- Auto Sync status panel -->
+  <div class="ss" style="margin-bottom:20px">
+    <div class="ss-t">🔄 Auto Sync</div>
+    <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+      <div id="syncStatusBadge" style="display:flex;align-items:center;gap:8px">
+        <div class="sp sp-sm"></div><span style="font-size:13px;color:var(--text3)">Đang kiểm tra...</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <label class="flbl" style="margin:0;white-space:nowrap">Giờ sync hàng ngày (VN):</label>
+        <select class="fs" id="syncHourSel" style="min-width:100px">
+          <option value="0">00:00</option>
+          <option value="1">01:00</option>
+          <option value="2">02:00</option>
+          <option value="3" selected>03:00</option>
+          <option value="4">04:00</option>
+          <option value="5">05:00</option>
+          <option value="6">06:00</option>
+          <option value="7">07:00</option>
+          <option value="8">08:00</option>
+          <option value="9">09:00</option>
+          <option value="10">10:00</option>
+          <option value="11">11:00</option>
+          <option value="12">12:00</option>
+          <option value="13">13:00</option>
+          <option value="14">14:00</option>
+          <option value="15">15:00</option>
+          <option value="16">16:00</option>
+          <option value="17">17:00</option>
+          <option value="18">18:00</option>
+          <option value="19">19:00</option>
+          <option value="20">20:00</option>
+          <option value="21">21:00</option>
+          <option value="22">22:00</option>
+          <option value="23">23:00</option>
+        </select>
+        <button class="btn btn-s sm" onclick="saveSyncConfig()">💾 Lưu</button>
+      </div>
+      <button class="btn btn-p sm" onclick="triggerSyncNow(this)">⚡ Sync ngay</button>
+    </div>
+  </div>
+
+  <div id="pvGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px"><div class="fc" style="height:120px;grid-column:1/-1"><div class="sp"></div></div></div>
+</div>
+
+<!-- TRANSACTIONS -->
+<div class="section" id="s-transactions">
+  <div class="ph"><div><div class="ph-t">Giao dịch</div><div class="ph-s">Lịch sử nạp tiền, mua hàng, hoàn tiền</div></div><div class="pa"><button class="btn btn-ex sm" onclick="exportCSV('transactions')">↓ Export CSV</button></div></div>
+  <div class="fb">
+    <select class="fs" id="txType" onchange="loadTx(1)"><option value="">Tất cả loại</option><option value="deposit">Nạp tiền</option><option value="order">Mua hàng</option><option value="refund">Hoàn tiền</option><option value="admin_adjust">Admin điều chỉnh</option></select>
+    <input class="fi" id="txFrom" type="date" onchange="loadTx(1)" style="min-width:130px">
+    <input class="fi" id="txTo" type="date" onchange="loadTx(1)" style="min-width:130px">
+  </div>
+  <div class="tc"><div class="tr-wrap"><table><thead><tr><th>ID</th><th>User</th><th>Loại</th><th>Số tiền</th><th>Số dư sau</th><th>Mô tả</th><th>Thời gian</th></tr></thead><tbody id="txTb"><tr class="lr"><td colspan="7"><div class="sp"></div></td></tr></tbody></table></div><div class="pag" id="txPag"></div></div>
+</div>
+
+<!-- COUPONS -->
+<div class="section" id="s-coupons">
+  <div class="ph"><div><div class="ph-t">Coupons</div><div class="ph-s">Thưởng thêm khi nạp tiền — user nhập mã vào nội dung chuyển khoản</div></div><div class="pa"><button class="btn btn-p sm" onclick="openCpMo()">+ Tạo Coupon</button></div></div>
+  <div class="tc"><div class="tr-wrap"><table><thead><tr><th>Mã coupon</th><th>Loại</th><th>Thưởng khi nạp</th><th>Đã dùng/Max</th><th>Nạp tối thiểu</th><th>Hết hạn</th><th>Trạng thái</th><th></th></tr></thead><tbody id="cpTb"><tr class="lr"><td colspan="8"><div class="sp"></div></td></tr></tbody></table></div></div>
+</div>
+
+<!-- BROADCAST -->
+<div class="section" id="s-broadcast">
+  <div class="ph">
+    <div><div class="ph-t">Broadcast</div><div class="ph-s">Gửi thủ công hoặc tự động bằng AI hàng ngày</div></div>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;max-width:1100px">
+
+    <!-- CỘT TRÁI: Manual broadcast -->
+    <div>
+      <div class="ss">
+        <div class="ss-t">✍️ Gửi thủ công</div>
+        <div class="fl"><div class="flbl">Đối tượng</div>
+          <div class="btg">
+            <label class="bto sel" id="bt_all"><input type="radio" name="btr" value="all" checked><span>👥</span><div><div style="font-size:13px;font-weight:600">Tất cả</div><div style="font-size:11px;color:var(--text3)">Chưa bị ban</div></div></label>
+            <label class="bto" id="bt_active"><input type="radio" name="btr" value="active"><span>✅</span><div><div style="font-size:13px;font-weight:600">Đã mua hàng</div><div style="font-size:11px;color:var(--text3)">Có ≥1 đơn</div></div></label>
+            <label class="bto" id="bt_inactive"><input type="radio" name="btr" value="inactive"><span>💤</span><div><div style="font-size:13px;font-weight:600">Chưa mua</div><div style="font-size:11px;color:var(--text3)">0 đơn</div></div></label>
+            <label class="bto" id="bt_resellers"><input type="radio" name="btr" value="resellers"><span>🔑</span><div><div style="font-size:13px;font-weight:600">Resellers</div><div style="font-size:11px;color:var(--text3)">Role reseller</div></div></label>
+          </div>
+        </div>
+        <div class="fl"><label class="flbl">Nội dung (HTML Telegram)</label><textarea class="fta" id="bcMsg" placeholder="Nội dung...&#10;&lt;b&gt;đậm&lt;/b&gt; &lt;i&gt;nghiêng&lt;/i&gt; &lt;code&gt;code&lt;/code&gt;" style="min-height:120px"></textarea></div>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-s" onclick="bcPreview()">👁 Preview</button>
+          <button class="btn btn-bc" id="bcBtn" onclick="doBroadcast()">✈ Gửi ngay</button>
+        </div>
+      </div>
+      <div class="ss" id="bcPrevBox" style="display:none">
+        <div class="ss-t">👁 Xem trước</div>
+        <div id="bcPrevC"></div>
+      </div>
+    </div>
+
+    <!-- CỘT PHẢI: AI Auto broadcast -->
+    <div>
+      <div class="ss">
+        <div class="ss-t">🤖 Tự động AI hàng ngày</div>
+
+        <!-- Status -->
+        <div id="abStatus" style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--rs);padding:14px;margin-bottom:16px">
+          <div class="fc" style="height:40px"><div class="sp sp-sm"></div></div>
+        </div>
+
+        <!-- Config -->
+        <div class="fl2 fl">
+          <div>
+            <label class="flbl">Giờ sáng</label>
+            <select class="fsel" id="abMorningH">
+              <option value="0">00:00</option>
+              <option value="1">01:00</option>
+              <option value="2">02:00</option>
+              <option value="3">03:00</option>
+              <option value="4">04:00</option>
+              <option value="5">05:00</option>
+              <option value="6">06:00</option>
+              <option value="7" selected>07:00</option>
+              <option value="8">08:00</option>
+              <option value="9">09:00</option>
+              <option value="10">10:00</option>
+              <option value="11">11:00</option>
+              <option value="12">12:00</option>
+              <option value="13">13:00</option>
+              <option value="14">14:00</option>
+              <option value="15">15:00</option>
+              <option value="16">16:00</option>
+              <option value="17">17:00</option>
+              <option value="18">18:00</option>
+              <option value="19">19:00</option>
+              <option value="20">20:00</option>
+              <option value="21">21:00</option>
+              <option value="22">22:00</option>
+              <option value="23">23:00</option>
+            </select>
+          </div>
+          <div>
+            <label class="flbl">Giờ tối</label>
+            <select class="fsel" id="abEveningH">
+              <option value="0">00:00</option>
+              <option value="1">01:00</option>
+              <option value="2">02:00</option>
+              <option value="3">03:00</option>
+              <option value="4">04:00</option>
+              <option value="5">05:00</option>
+              <option value="6">06:00</option>
+              <option value="7">07:00</option>
+              <option value="8">08:00</option>
+              <option value="9">09:00</option>
+              <option value="10">10:00</option>
+              <option value="11">11:00</option>
+              <option value="12">12:00</option>
+              <option value="13">13:00</option>
+              <option value="14">14:00</option>
+              <option value="15">15:00</option>
+              <option value="16">16:00</option>
+              <option value="17">17:00</option>
+              <option value="18">18:00</option>
+              <option value="19" selected>19:00</option>
+              <option value="20">20:00</option>
+              <option value="21">21:00</option>
+              <option value="22">22:00</option>
+              <option value="23">23:00</option>
+            </select>
+          </div>
+        </div>
+        <div class="fl2 fl">
+          <div>
+            <label class="flbl">Target buổi sáng</label>
+            <select class="fsel" id="abMorningT"><option value="all">Tất cả</option><option value="active">Đã mua</option><option value="inactive">Chưa mua</option></select>
+          </div>
+          <div>
+            <label class="flbl">Target buổi tối</label>
+            <select class="fsel" id="abEveningT"><option value="all">Tất cả</option><option value="active">Đã mua</option><option value="inactive">Chưa mua</option></select>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn btn-p sm" onclick="saveAbConfig()">💾 Lưu lịch</button>
+          <button class="btn btn-s sm" onclick="previewAiMsg('morning')">🌅 Preview sáng</button>
+          <button class="btn btn-s sm" onclick="previewAiMsg('evening')">🌙 Preview tối</button>
+        </div>
+      </div>
+
+      <!-- Trigger thủ công AI -->
+      <div class="ss">
+        <div class="ss-t">⚡ Kích hoạt AI ngay</div>
+        <div class="fl2 fl">
+          <div>
+            <label class="flbl">Buổi</label>
+            <select class="fsel" id="abTriggerTime"><option value="morning">🌅 Sáng</option><option value="evening">🌙 Tối</option></select>
+          </div>
+          <div>
+            <label class="flbl">Target</label>
+            <select class="fsel" id="abTriggerTarget"><option value="all">Tất cả</option><option value="active">Đã mua</option><option value="inactive">Chưa mua</option></select>
+          </div>
+        </div>
+        <button class="btn btn-bc" id="abTriggerBtn" onclick="triggerAiBroadcast()">🤖 Gửi AI broadcast ngay</button>
+        <div class="fhint" style="margin-top:8px">AI sẽ tự sinh nội dung random và gửi ngay lập tức</div>
+      </div>
+
+      <!-- AI Preview box -->
+      <div class="ss" id="abPrevBox" style="display:none">
+        <div class="ss-t">✨ Nội dung AI sinh ra</div>
+        <div id="abPrevContent" style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--rs);padding:14px;font-size:13px;line-height:1.7;white-space:pre-wrap;word-break:break-word"></div>
+        <div style="margin-top:10px;display:flex;gap:8px">
+          <button class="btn btn-s sm" onclick="copyAiMsg()">📋 Copy</button>
+          <button class="btn btn-ghost sm" onclick="document.getElementById('bcMsg').value=document.getElementById('abPrevContent').textContent;toast('Đã copy sang ô manual','success')">→ Dùng cho manual</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- SETTINGS -->
+<div class="section" id="s-settings">
+  <div class="ph"><div><div class="ph-t">Cài đặt</div><div class="ph-s">Cấu hình hệ thống và theo dõi trạng thái</div></div></div>
+  <div class="ss">
+    <div class="ss-t">📡 System Health</div>
+    <div class="hg" id="hGrid"><div class="fc" style="height:60px;grid-column:1/-1"><div class="sp"></div></div></div>
+    <button class="btn btn-g sm" style="margin-top:12px" onclick="loadHealth()">↻ Kiểm tra lại</button>
+  </div>
+  <div class="ss">
+    <div class="ss-t">⚙️ Cài đặt chung</div>
+    <div class="ssg">
+      <div class="fl"><label class="flbl">Profit % mặc định</label><input class="finp" id="sPct" type="number" step="0.5" min="0" placeholder="30"><div class="fhint">% lợi nhuận cộng thêm vào giá provider</div></div>
+      <div class="fl"><label class="flbl">Tỷ giá USD→VND</label><input class="finp" id="sRate" type="number" placeholder="25000"></div>
+      <div class="fl"><label class="flbl">Số TK SePay</label><input class="finp" id="sAcc" placeholder="19675051"></div>
+      <div class="fl"><label class="flbl">Ngân hàng SePay</label><input class="finp" id="sBank" placeholder="ACB"></div>
+    </div>
+    <button class="btn btn-p" onclick="saveSettings()">Lưu cài đặt</button>
+    <div class="fhint" style="margin-top:8px">⚠️ Chỉ runtime — update .env để lưu vĩnh viễn</div>
+  </div>
+</div>
+
+    </div>
+  </div>
+</div>
+
+<!-- MODALS -->
+<div class="mo" id="moUser"><div class="md"><div class="md-hd"><div class="md-t" id="moUT">User Action</div><button class="md-x" onclick="cmo('moUser')">✕</button></div><div class="md-b" id="moUB"></div><div class="md-f"><button class="btn btn-g" onclick="cmo('moUser')">Hủy</button><button class="btn btn-p" onclick="saveUA()">Lưu</button></div></div></div>
+<div class="mo" id="moUD"><div class="md md-xl"><div class="md-hd"><div class="md-t" id="moUDT">Chi tiết User</div><button class="md-x" onclick="cmo('moUD')">✕</button></div><div class="md-b" id="moUDB"></div></div></div>
+<div class="mo" id="moSvc"><div class="md"><div class="md-hd"><div class="md-t">Chỉnh sửa Service</div><button class="md-x" onclick="cmo('moSvc')">✕</button></div><div class="md-b"><div class="fl"><label class="flbl">Tên dịch vụ</label><input class="finp" id="svName"></div><div class="fl2 fl"><div><label class="flbl">Profit %</label><input class="finp" id="svProfit" type="number" step="0.5" min="0" placeholder="0=default"></div><div><label class="flbl">Giá bán tuỳ chỉnh (VND/1k)</label><input class="finp" id="svCustom" type="number" placeholder="Trống=auto"></div></div><div class="fl2 fl"><div><label class="flbl">Thứ tự hiển thị</label><input class="finp" id="svSort" type="number" value="0"></div><div><label class="flbl">Trạng thái</label><br><label class="tgl" style="margin-top:10px"><input type="checkbox" id="svAct"><div class="tsl"></div></label><span style="margin-left:10px;font-size:12px;color:var(--text2)">Bật dịch vụ</span></div></div></div><div class="md-f"><button class="btn btn-g" onclick="cmo('moSvc')">Hủy</button><button class="btn btn-p" onclick="saveSvc()">Lưu</button></div></div></div>
+<div class="mo" id="moBulk"><div class="md"><div class="md-hd"><div class="md-t">Bulk Update Services</div><button class="md-x" onclick="cmo('moBulk')">✕</button></div><div class="md-b"><div class="fl"><label class="flbl">Platform</label><select class="fsel" id="bkPlatf"><option value="">Tất cả platform</option></select></div><div class="fl"><label class="flbl">Profit % mới</label><input class="finp" id="bkProfit" type="number" step="0.5" placeholder="Trống=giữ nguyên"></div><div class="fl"><label class="flbl">Giá bán tuỳ chỉnh (VND/1k)</label><input class="finp" id="bkCustom" type="number" placeholder="Trống=giữ nguyên"></div><div class="fl"><label style="display:flex;align-items:center;gap:8px;cursor:pointer"><label class="tgl"><input type="checkbox" id="bkActOvr" onchange="document.getElementById('bkActRow').style.display=this.checked?'':'none'"><div class="tsl"></div></label><span style="font-size:13px;color:var(--text2)">Cập nhật trạng thái</span></label><div id="bkActRow" style="margin-top:8px;display:none"><label style="display:flex;align-items:center;gap:8px;cursor:pointer"><label class="tgl"><input type="checkbox" id="bkAct" checked><div class="tsl"></div></label><span style="font-size:13px;color:var(--text2)">Bật tất cả dịch vụ chọn</span></label></div></div></div><div class="md-f"><button class="btn btn-g" onclick="cmo('moBulk')">Hủy</button><button class="btn btn-p" onclick="saveBulk()">Áp dụng</button></div></div></div>
+<div class="mo" id="moPv"><div class="md"><div class="md-hd"><div class="md-t" id="moPvT">Thêm Provider</div><button class="md-x" onclick="cmo('moPv')">✕</button></div><div class="md-b"><div class="fl"><label class="flbl">Tên provider</label><input class="finp" id="pvName" placeholder="VD: KingsSMM"></div><div class="fl"><label class="flbl">API URL</label><input class="finp" id="pvUrl" placeholder="https://provider.com/api/v2"></div><div class="fl"><label class="flbl">API Key</label><input class="finp" id="pvKey" placeholder="Khóa API bí mật"></div><div class="fl2 fl"><div><label class="flbl">Tiền tệ</label><select class="fsel" id="pvCur"><option value="USD">USD</option><option value="VND">VND</option></select></div><div><label class="flbl">Tỷ giá (VND/tệ)</label><input class="finp" id="pvRate" type="number" value="25000"></div></div><div class="fl2 fl"><div><label class="flbl">Priority</label><input class="finp" id="pvPri" type="number" value="1" min="1"></div><div><label class="flbl">Trạng thái</label><select class="fsel" id="pvStat"><option value="active">Active</option><option value="inactive">Inactive</option></select></div></div><div class="fl"><label class="flbl">Profit % riêng của provider</label><input class="finp" id="pvProfit" type="number" value="0" step="0.5" min="0" max="1000" placeholder="0 = dùng DEFAULT_PROFIT_PERCENT"><div class="fhint">0 = dùng DEFAULT_PROFIT_PERCENT từ .env · Giá bán = Giá gốc × (1 + profit%/100)</div></div></div><div class="md-f"><button class="btn btn-g" onclick="cmo('moPv')">Hủy</button><button class="btn btn-p" onclick="savePv()">Lưu</button></div></div></div>
+<div class="mo" id="moCp"><div class="md"><div class="md-hd"><div><div class="md-t">Tạo Coupon mới</div><div style="font-size:11px;color:var(--text3);margin-top:2px">Áp dụng khi nạp tiền — user nhập vào nội dung chuyển khoản</div></div><button class="md-x" onclick="cmo('moCp')">✕</button></div><div class="md-b"><div class="fl"><label class="flbl">Mã coupon</label><input class="finp" id="cpCode" placeholder="VD: SUMMER2025" style="text-transform:uppercase"></div><div class="fl2 fl"><div><label class="flbl">Loại</label><select class="fsel" id="cpType"><option value="percent">Phần trăm (%)</option><option value="fixed">Cố định (VND)</option></select></div><div><label class="flbl">Giá trị</label><input class="finp" id="cpVal" type="number" placeholder="10 hoặc 50000"></div></div><div class="fl2 fl"><div><label class="flbl">Số lần dùng tối đa</label><input class="finp" id="cpMax" type="number" value="1" min="1"></div><div><label class="flbl">Nạp tối thiểu (VND)</label><input class="finp" id="cpMin" type="number" value="0"></div></div><div class="fl"><label class="flbl">Ngày hết hạn (trống=không hết)</label><input class="finp" id="cpExp" type="datetime-local"></div></div><div class="md-f"><button class="btn btn-g" onclick="cmo('moCp')">Hủy</button><button class="btn btn-p" onclick="saveCp()">Tạo Coupon</button></div></div></div>
+
+<script>
+const AB='/api';
+let token=localStorage.getItem('admin_token');
+let rcObj,scObj,ugObj,pfObj,dashData=null,revMode='revenue';
+const pg={users:1,orders:1,services:1,tx:1};
+let uaData={},editPv=null,svcEId=null;
+
+async function doLogin(){
+  const b=document.getElementById('lgB'),e=document.getElementById('lgE');
+  b.disabled=true;b.textContent='Đang đăng nhập…';e.style.display='none';
+  try{
+    const r=await fetch(`${AB}/auth/login`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:document.getElementById('lgU').value,password:document.getElementById('lgP').value})});
+    const d=await r.json();if(!d.success)throw new Error(d.message||'Sai thông tin');
+    token=d.token;localStorage.setItem('admin_token',token);showApp();
+  }catch(ex){e.textContent=ex.message;e.style.display='block';}
+  b.disabled=false;b.textContent='Đăng nhập';
+}
+function doLogout(){localStorage.removeItem('admin_token');token=null;document.getElementById('appShell').style.display='none';document.getElementById('loginScreen').style.display='flex';}
+function showApp(){document.getElementById('loginScreen').style.display='none';document.getElementById('appShell').style.display='flex';loadDashboard();loadHealth();setInterval(tick,1000);setInterval(()=>loadHealth(true),30000);}
+
+async function api(path,opts={}){
+  const r=await fetch(`${AB}${path}`,{...opts,headers:{'Authorization':`Bearer ${token}`,'Content-Type':'application/json',...(opts.headers||{})},body:opts.body?(typeof opts.body==='string'?opts.body:JSON.stringify(opts.body)):undefined});
+  if(r.status===401){doLogout();throw new Error('Session expired');}
+  const d=await r.json();if(!d.success)throw new Error(d.message||'Server error');return d;
+}
+
+function toast(msg,type='info'){
+  const c=document.getElementById('toast-c'),el=document.createElement('div');
+  const ic={success:'✅',error:'❌',info:'ℹ️',warning:'⚠️'};
+  el.className=`toast ${type}`;el.innerHTML=`<span style="font-size:16px">${ic[type]||'ℹ️'}</span><span>${msg}</span>`;
+  c.appendChild(el);setTimeout(()=>{el.classList.add('removing');setTimeout(()=>el.remove(),300);},3500);
+}
+
+const fv=n=>Number(n||0).toLocaleString('vi-VN')+'₫';
+const fd=d=>{if(!d)return'—';return new Date(d).toLocaleString('vi-VN',{dateStyle:'short',timeStyle:'short'});};
+const fn=n=>Number(n||0).toLocaleString('vi-VN');
+const cmo=id=>document.getElementById(id).classList.remove('open');
+const omo=id=>document.getElementById(id).classList.add('open');
+const toggleSidebar=()=>document.getElementById('sidebar').classList.toggle('open');
+const clearOrdF=()=>{['ordSrch','ordFrom','ordTo'].forEach(x=>document.getElementById(x).value='');document.getElementById('ordStat').value='';loadOrders(1);};
+const tick=()=>document.getElementById('tbTime').textContent=new Date().toLocaleString('vi-VN',{timeStyle:'medium',dateStyle:'short'});
+document.getElementById('appShell').addEventListener('click',e=>{if(window.innerWidth<=768&&!e.target.closest('.sidebar')&&!e.target.closest('.hbg'))document.getElementById('sidebar').classList.remove('open');});
+document.getElementById('lgP').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
+function deb(fn,ms){let t;return(...a)=>{clearTimeout(t);t=setTimeout(()=>fn(...a),ms);};}
+const dbc={users:deb(()=>loadUsers(1),400),orders:deb(()=>loadOrders(1),400),services:deb(()=>loadServices(1),400)};
+
+function nav(page){
+  document.querySelectorAll('.ni').forEach(x=>x.classList.remove('active'));
+  document.querySelector(`.ni[onclick="nav('${page}')"]`)?.classList.add('active');
+  document.querySelectorAll('.section').forEach(x=>x.classList.remove('active'));
+  document.getElementById(`s-${page}`)?.classList.add('active');
+  const tt={dashboard:'Dashboard',analytics:'Analytics',users:'Người dùng',orders:'Đơn hàng',services:'Dịch vụ',providers:'Providers',transactions:'Giao dịch',coupons:'Coupons',settings:'Cài đặt',broadcast:'Broadcast'};
+  document.getElementById('tbTitle').textContent=tt[page]||page;
+  document.getElementById('tbBC').textContent=`BotSMM / ${tt[page]||page}`;
+  ({users:loadUsers,orders:loadOrders,services:loadServices,providers:()=>{loadProviders();loadSyncStatus();},transactions:loadTx,coupons:loadCoupons,settings:loadSettings,analytics:loadAnalytics,broadcast:loadAbStatus})[page]?.();
+}
+
+async function loadDashboard(){
+  try{
+    const d=await api('/admin/dashboard');dashData=d.data;const s=d.data.stats;
+    const tr=(n,p)=>{if(!p)return{c:'nt',i:'—',v:''};const pct=((n-p)/p*100).toFixed(0);return pct>=0?{c:'up',i:'↑',v:`+${pct}%`}:{c:'dn',i:'↓',v:`${pct}%`};};
+    const rv=tr(s.revenueToday,s.revenueYesterday),ov=tr(s.ordersToday,s.ordersYesterday),uv=tr(s.newUsersToday,s.newUsersYesterday);
+    document.getElementById('statsGrid').innerHTML=`
+      <div class="sc s-bl"><div class="sc-hd"><div class="sc-ic">👥</div><div class="sc-tr ${uv.c}">${uv.i} ${uv.v}</div></div><div class="sc-val">${fn(s.totalUsers)}</div><div class="sc-lbl">Tổng Users</div><div class="sc-sub">+${fn(s.newUsersToday)} hôm nay</div></div>
+      <div class="sc s-gr"><div class="sc-hd"><div class="sc-ic">📦</div><div class="sc-tr ${ov.c}">${ov.i} ${ov.v}</div></div><div class="sc-val">${fn(s.totalOrders)}</div><div class="sc-lbl">Tổng Đơn hàng</div><div class="sc-sub">+${fn(s.ordersToday)} hôm nay</div></div>
+      <div class="sc s-or"><div class="sc-hd"><div class="sc-ic">⏳</div><div class="sc-tr nt">⬤</div></div><div class="sc-val">${fn(s.pendingOrders)}</div><div class="sc-lbl">Đơn chờ xử lý</div><div class="sc-sub">${fn(s.processingOrders)} đang chạy</div></div>
+      <div class="sc s-pu"><div class="sc-hd"><div class="sc-ic">💰</div><div class="sc-tr ${rv.c}">${rv.i} ${rv.v}</div></div><div class="sc-val" style="font-size:16px">${fv(s.revenueToday)}</div><div class="sc-lbl">Doanh thu hôm nay</div><div class="sc-sub">Tháng: ${fv(s.revenueMonth)}</div></div>
+      <div class="sc s-gr"><div class="sc-hd"><div class="sc-ic">💳</div></div><div class="sc-val" style="font-size:16px">${fv(s.depositToday)}</div><div class="sc-lbl">Nạp tiền hôm nay</div><div class="sc-sub">Tổng: ${fv(s.totalDeposit)}</div></div>
+      <div class="sc s-cy"><div class="sc-hd"><div class="sc-ic">🛒</div></div><div class="sc-val">${fn(s.activeServices)}</div><div class="sc-lbl">Services bật</div><div class="sc-sub">${fn(s.activeProviders)} providers</div></div>`;
+    const pb=document.getElementById('pendBadge');pb.textContent=s.pendingOrders;pb.style.display=s.pendingOrders>0?'':'none';
+    renderRevChart(d.data.revenueChart);renderStatChart(d.data.statusDistribution);
+    renderTopSvc(d.data.topServices);renderRecentOrd(d.data.recentOrders);renderTopUsers(d.data.topUsers);renderHourly(d.data.hourlyOrders);
+  }catch(e){toast(e.message,'error');}
+}
+
+function switchRevView(m,el){revMode=m;el.closest('.ctabs').querySelectorAll('.ctab').forEach(t=>t.classList.remove('active'));el.classList.add('active');if(dashData)renderRevChart(dashData.revenueChart);}
+function renderRevChart(data){
+  const ctx=document.getElementById('revChart').getContext('2d');if(rcObj)rcObj.destroy();const isR=revMode==='revenue';
+  rcObj=new Chart(ctx,{type:'line',data:{labels:data.map(d=>d.date.slice(5)),datasets:[{data:data.map(d=>isR?d.revenue:d.orders),borderColor:isR?'#3b82f6':'#10b981',backgroundColor:isR?'rgba(59,130,246,.08)':'rgba(16,185,129,.08)',tension:.4,fill:true,pointRadius:3,pointHoverRadius:6,pointBackgroundColor:isR?'#3b82f6':'#10b981'}]},options:{responsive:true,plugins:{legend:{display:false}},scales:{x:{grid:{color:'rgba(255,255,255,.03)'},ticks:{color:'#475569',font:{size:10},maxTicksLimit:10}},y:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#475569',font:{size:10},callback:v=>isR?(v>=1e6?(v/1e6).toFixed(1)+'M':fn(v)):fn(v)}}}}});
+}
+function renderStatChart(data){
+  const ctx=document.getElementById('statChart').getContext('2d');if(scObj)scObj.destroy();
+  const co={Completed:'#10b981','In progress':'#3b82f6',Processing:'#8b5cf6',Pending:'#f59e0b',Partial:'#f59e0b',Canceled:'#ef4444',Failed:'#ef4444'};
+  scObj=new Chart(ctx,{type:'doughnut',data:{labels:data.map(d=>`${d.status} (${d.count})`),datasets:[{data:data.map(d=>d.count),backgroundColor:data.map(d=>co[d.status]||'#475569'),borderColor:'transparent',borderWidth:0}]},options:{responsive:true,cutout:'65%',plugins:{legend:{position:'right',labels:{color:'#94a3b8',font:{size:11},boxWidth:10,padding:10}}}}});
+}
+function renderTopSvc(data){document.getElementById('topSL').innerHTML=data.length?data.slice(0,8).map((s,i)=>`<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid rgba(30,45,69,.4)"><div style="width:22px;height:22px;border-radius:50%;background:var(--accent-dim);color:var(--accent);font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0">${i+1}</div><div style="flex:1;overflow:hidden"><div style="font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${s.name||'—'}</div><div style="font-size:10px;color:var(--text3)">${s.platform||''}</div></div><div style="text-align:right;flex-shrink:0"><div class="vnd" style="font-size:11px">${fv(s.total_revenue)}</div><div style="font-size:10px;color:var(--text3)">${fn(s.order_count)} đơn</div></div></div>`).join(''):'<div style="color:var(--text3);font-size:13px;padding:12px 0">Chưa có dữ liệu</div>';}
+function renderRecentOrd(orders){const sc={Completed:'b-ok','In progress':'b-in',Processing:'b-pu',Pending:'b-wa',Canceled:'b-se',Failed:'b-ng',Partial:'b-wa'};document.getElementById('recentOL').innerHTML=orders?.length?orders.map(o=>`<div class="roi"><div class="rb">#${o.id}</div><div class="ri"><div class="rin">${o.service?.name||'—'}</div><div class="riu">@${o.user?.username||o.user?.first_name||'—'} · ${fd(o.created_at)}</div></div><span class="badge ${sc[o.status]||'b-se'}" style="font-size:10px">${o.status}</span><div class="rc">${fv(o.charge)}</div></div>`).join(''):'<div style="color:var(--text3);font-size:12px;padding:8px 0">Chưa có đơn</div>';}
+function renderTopUsers(users){const rc=i=>i===0?'r1':i===1?'r2':i===2?'r3':'r0';document.getElementById('topUL').innerHTML=users?.length?users.map((u,i)=>`<div class="tui"><div class="tur ${rc(i)}">${i+1}</div><div class="tuf"><div class="tun">${u.first_name||u.username||'User #'+u.id}</div><div class="tuod">${fn(u.total_orders)} đơn</div></div><div class="tus">${fv(u.total_spent)}</div></div>`).join(''):'<div style="color:var(--text3);font-size:12px;padding:8px 0">Chưa có dữ liệu</div>';}
+function renderHourly(data){if(!data?.length)return;const mx=Math.max(...data.map(d=>d.count),1);document.getElementById('hrBars').innerHTML=data.map(d=>`<div class="hbar" style="height:${Math.max(2,(d.count/mx)*56)}px" title="${d.hour}:00 — ${d.count} đơn"></div>`).join('');}
+
+let anViewMode='profit',anData=null,anMainObj=null;
+function switchAnView(mode,el){anViewMode=mode;el.closest('.ctabs').querySelectorAll('.ctab').forEach(t=>t.classList.remove('active'));el.classList.add('active');if(anData)renderAnMainChart(anData.dailyStats);}
+
+function renderAnMainChart(daily){
+  const ctx=document.getElementById('anMainChart').getContext('2d');if(anMainObj)anMainObj.destroy();
+  let ds=[];
+  if(anViewMode==='profit'){
+    ds=[
+      {label:'Lợi nhuận',data:daily.map(d=>d.profit),borderColor:'#10b981',backgroundColor:'rgba(16,185,129,.1)',fill:true,tension:.4,pointRadius:3},
+      {label:'Doanh thu',data:daily.map(d=>d.revenue),borderColor:'#3b82f6',backgroundColor:'rgba(59,130,246,.05)',fill:false,tension:.4,pointRadius:2,borderDash:[4,2]},
+      {label:'Chi phí',data:daily.map(d=>d.cost),borderColor:'#ef4444',backgroundColor:'rgba(239,68,68,.05)',fill:false,tension:.4,pointRadius:2,borderDash:[2,3]},
+    ];
+  } else if(anViewMode==='revenue'){
+    ds=[{label:'Doanh thu',data:daily.map(d=>d.revenue),borderColor:'#3b82f6',backgroundColor:'rgba(59,130,246,.1)',fill:true,tension:.4,pointRadius:3}];
+  } else {
+    ds=[{label:'Đơn hàng',data:daily.map(d=>d.orders),borderColor:'#8b5cf6',backgroundColor:'rgba(139,92,246,.1)',fill:true,tension:.4,pointRadius:3}];
+  }
+  anMainObj=new Chart(ctx,{type:'line',data:{labels:daily.map(d=>d.date.slice(5)),datasets:ds},options:{responsive:true,interaction:{mode:'index',intersect:false},plugins:{legend:{labels:{color:'#94a3b8',font:{size:11},boxWidth:10}}},scales:{x:{grid:{color:'rgba(255,255,255,.03)'},ticks:{color:'#475569',font:{size:10},maxTicksLimit:12}},y:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#475569',font:{size:10},callback:v=>v>=1e6?(v/1e6).toFixed(1)+'M':fn(v)}}}}});
+}
+
+async function loadAnalytics(){
+  const period=document.getElementById('anPeriod').value;
+  try{
+    const ana=await api(`/admin/analytics?period=${period}`);
+    anData=ana.data;const s=ana.data.summary,at=ana.data.allTime;
+
+    // KPI cards
+    document.getElementById('anKpi').innerHTML=`
+      <div class="kc"><div class="kl">Doanh thu (kỳ)</div><div class="kv" style="font-size:18px;color:var(--accent)">${fv(s.revenue)}</div></div>
+      <div class="kc"><div class="kl">Chi phí gốc (kỳ)</div><div class="kv" style="font-size:18px;color:var(--red)">${fv(s.cost)}</div></div>
+      <div class="kc"><div class="kl" style="color:var(--green)">Lợi nhuận (kỳ)</div><div class="kv" style="font-size:20px;color:var(--green);font-weight:700">${fv(s.profit)}</div></div>
+      <div class="kc"><div class="kl">Biên lợi nhuận</div><div class="kv" style="color:${s.marginPct>=20?'var(--green)':s.marginPct>=10?'var(--orange)':'var(--red)'}">${s.marginPct}<span class="ku">%</span></div></div>
+      <div class="kc"><div class="kl">AOV (trung bình đơn)</div><div class="kv" style="font-size:18px">${fv(s.aov)}</div></div>
+      <div class="kc"><div class="kl">Chuyển đổi</div><div class="kv">${ana.data.conversionRate}<span class="ku">%</span></div></div>
+    `;
+
+    // Subtitle
+    document.getElementById('anChartSub').textContent=`${period} · LN tổng: ${fv(s.profit)} · Margin: ${s.marginPct}%`;
+
+    // Main chart
+    renderAnMainChart(ana.data.dailyStats);
+
+    // Platform donut (by profit)
+    const c2=document.getElementById('pfChart').getContext('2d');if(pfObj)pfObj.destroy();
+    const pfd=ana.data.revByPlatform.filter(p=>p.platform).sort((a,b)=>b.profit-a.profit);
+    const pfc=['#10b981','#3b82f6','#f59e0b','#8b5cf6','#ef4444','#06b6d4','#f97316'];
+    pfObj=new Chart(c2,{type:'doughnut',data:{labels:pfd.map(p=>p.platform),datasets:[{data:pfd.map(p=>Math.max(p.profit,0)),backgroundColor:pfc.slice(0,pfd.length),borderColor:'transparent'}]},options:{responsive:true,cutout:'60%',plugins:{legend:{position:'right',labels:{color:'#94a3b8',font:{size:11},boxWidth:10}}}}});
+
+    // Platform table
+    document.getElementById('pfTable').innerHTML=pfd.length?`<table style="width:100%;font-size:11px"><thead><tr><th>Platform</th><th>Doanh thu</th><th>Chi phí</th><th style="color:var(--green)">Lợi nhuận</th></tr></thead><tbody>${pfd.map(p=>`<tr><td>${p.platform}</td><td class="vnd">${fv(p.revenue)}</td><td style="color:var(--red);font-family:var(--fm)">${fv(p.cost)}</td><td style="color:var(--green);font-family:var(--fm);font-weight:600">${fv(p.profit)}</td></tr>`).join('')}</tbody></table>`:'';
+
+    // User growth chart
+    const c1=document.getElementById('ugChart').getContext('2d');if(ugObj)ugObj.destroy();
+    ugObj=new Chart(c1,{type:'bar',data:{labels:ana.data.userGrowth.map(d=>d.date.slice(5)),datasets:[{label:'Users mới',data:ana.data.userGrowth.map(d=>d.count),backgroundColor:'rgba(59,130,246,.5)',borderColor:'#3b82f6',borderWidth:1,borderRadius:4}]},options:{responsive:true,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{color:'#475569',font:{size:10},maxTicksLimit:10}},y:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#475569',font:{size:10}}}}}});
+
+    // Top services by profit
+    document.getElementById('anTopProfit').innerHTML=ana.data.topByProfit.length
+      ?ana.data.topByProfit.map((s,i)=>{const mg=s.revenue>0?(s.profit/s.revenue*100).toFixed(1):0;return`<tr>
+        <td class="mn" style="color:var(--text3)">${i+1}</td>
+        <td><div style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px">${s.name||'—'}</div><span class="badge b-se" style="font-size:9px">${s.platform||''}</span></td>
+        <td class="mn">${fn(s.order_count)}</td>
+        <td class="vnd">${fv(s.revenue)}</td>
+        <td style="color:var(--red);font-family:var(--fm);font-size:12px">${fv(s.cost)}</td>
+        <td style="color:var(--green);font-family:var(--fm);font-size:12px;font-weight:700">${fv(s.profit)}</td>
+        <td><span class="badge ${mg>=30?'b-ok':mg>=15?'b-wa':'b-ng'}">${mg}%</span></td>
+      </tr>`;}).join('')
+      :'<tr class="er"><td colspan="7">Chưa có dữ liệu</td></tr>';
+
+    // All-time
+    const atEl=document.getElementById('anAllTime');atEl.style.display='';
+    document.getElementById('anAllTimeGrid').innerHTML=`
+      <div class="hi"><div class="hil">Tổng doanh thu</div><div class="hiv" style="color:var(--accent)">${fv(at.revenue)}</div></div>
+      <div class="hi"><div class="hil">Tổng chi phí</div><div class="hiv" style="color:var(--red)">${fv(at.cost)}</div></div>
+      <div class="hi"><div class="hil">Tổng lợi nhuận</div><div class="hiv" style="color:var(--green);font-size:18px">${fv(at.profit)}</div></div>
+      <div class="hi"><div class="hil">Biên lợi nhuận</div><div class="hiv ${at.marginPct>=20?'hok':at.marginPct>=10?'hwn':'her'}">${at.marginPct}%</div></div>
+    `;
+  }catch(e){toast(e.message,'error');}
+}
+
+async function loadHealth(silent=false){
+  try{
+    const d=await api('/admin/system/health');const h=d.data;const ok=h.status==='healthy';
+    document.getElementById('tbHealth').className=`tb-health ${ok?'':'warn'}`;
+    document.getElementById('stDot').className=`st-dot ${ok?'':'warn'}`;
+    document.getElementById('stTxt').textContent=ok?'All systems OK':'Degraded';
+    document.getElementById('hGrid').innerHTML=`
+      <div class="hi"><div class="hil">Status</div><div class="hiv ${ok?'hok':'hwn'}">${h.status}</div></div>
+      <div class="hi"><div class="hil">Uptime</div><div class="hiv">${h.uptimeHuman}</div></div>
+      <div class="hi"><div class="hil">Database</div><div class="hiv ${h.db==='connected'?'hok':'her'}">${h.db}</div></div>
+      <div class="hi"><div class="hil">Redis</div><div class="hiv ${h.redis==='connected'?'hok':'her'}">${h.redis}</div></div>
+      <div class="hi"><div class="hil">Telegram Bot</div><div class="hiv ${h.bot==='running'?'hok':'hwn'}">${h.bot}</div></div>
+      <div class="hi"><div class="hil">Memory (heap)</div><div class="hiv">${h.memory.used}MB</div><div class="his">RSS ${h.memory.rss}MB</div></div>
+      <div class="hi"><div class="hil">Response Time</div><div class="hiv">${h.responseTime}ms</div></div>
+      <div class="hi"><div class="hil">Node.js</div><div class="hiv" style="font-size:13px">${h.nodeVersion}</div><div class="his">${h.env}</div></div>`;
+  }catch(e){
+    if(!silent)toast(e.message,'error');
+    document.getElementById('stDot').className='st-dot error';document.getElementById('stTxt').textContent='Lỗi kết nối';
+    document.getElementById('tbHealth').className='tb-health error';
+  }
+}
+
+function exportCSV(type){
+  const p=new URLSearchParams({type});
+  if(type==='orders'){const f=document.getElementById('ordFrom')?.value,t=document.getElementById('ordTo')?.value,s=document.getElementById('ordStat')?.value;if(f)p.append('dateFrom',f);if(t)p.append('dateTo',t);if(s)p.append('status',s);}
+  else if(type==='transactions'){const f=document.getElementById('txFrom')?.value,t=document.getElementById('txTo')?.value;if(f)p.append('dateFrom',f);if(t)p.append('dateTo',t);}
+  fetch(`${AB}/admin/export?${p.toString()}`,{headers:{'Authorization':`Bearer ${token}`}}).then(r=>r.blob()).then(b=>{const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=`${type}_${Date.now()}.csv`;a.click();toast(`Đã xuất ${type} CSV`,'success');}).catch(()=>toast('Lỗi xuất dữ liệu','error'));
+}
+
+async function loadOrders(p){
+  if(p)pg.orders=p;const lm=20;
+  const q=new URLSearchParams({page:pg.orders,limit:lm,status:document.getElementById('ordStat').value,search:document.getElementById('ordSrch').value,dateFrom:document.getElementById('ordFrom').value,dateTo:document.getElementById('ordTo').value}).toString();
+  document.getElementById('ordTb').innerHTML='<tr class="lr"><td colspan="9"><div class="sp"></div></td></tr>';
+  try{
+    const d=await api(`/admin/orders?${q}`);
+    const ordRows=Array.isArray(d.data)?d.data:(d.data?.rows||[]);
+    const ordTotal=d.total||ordRows.length;
+    const sc={Completed:'b-ok','In progress':'b-in',Processing:'b-pu',Pending:'b-wa',Partial:'b-wa',Canceled:'b-se',Failed:'b-ng'};
+    if(!ordRows.length){document.getElementById('ordTb').innerHTML='<tr class="er"><td colspan="9">Không có đơn hàng</td></tr>';return;}
+    document.getElementById('ordTb').innerHTML=ordRows.map(o=>`<tr>
+      <td><span class="mn" style="color:var(--accent)">#${o.id}</span></td>
+      <td><div class="mn" style="font-size:11px;color:var(--accent)">@${o.user?.username||'—'}</div><div style="font-size:10px;color:var(--text3)">${o.user?.telegram_id||''}</div></td>
+      <td><div class="trunc" title="${o.service?.name||''}" style="max-width:140px;font-size:12px">${o.service?.name||'—'}</div><span class="badge b-se" style="font-size:9px">${o.service?.platform||''}</span></td>
+      <td><div class="trunc mn" style="max-width:110px;font-size:11px" title="${o.link||''}">${o.link||''}</div></td>
+      <td class="mn">${fn(o.quantity)}</td><td class="vnd">${fv(o.charge)}</td>
+      <td><span class="badge ${sc[o.status]||'b-se'}">${o.status}</span>${o.error_message?`<div style="font-size:10px;color:var(--red);margin-top:2px">${o.error_message.substring(0,35)}</div>`:''}</td>
+      <td style="font-size:11px;color:var(--text3)">${fd(o.created_at)}</td>
+      <td><div style="display:flex;gap:4px">
+        ${!['Completed','Canceled'].includes(o.status)?`<button class="btn btn-g sm" onclick="fComplete(${o.id})" title="Hoàn thành">✓</button>`:''}
+        ${!['Completed','Canceled'].includes(o.status)?`<button class="btn btn-d sm" onclick="fCancel(${o.id})" title="Hủy">✕</button>`:''}
+        ${o.provider_order_id?`<button class="btn btn-s sm" onclick="fRefill(${o.id})" title="Refill">↺</button>`:''}
+      </div></td>
+    </tr>`).join('');
+    renderPag('ordPag',pg.orders,Math.ceil(ordTotal/lm),ordTotal,loadOrders);
+  }catch(e){toast(e.message,'error');}
+}
+async function fComplete(id){if(!confirm('Đánh dấu Completed?'))return;try{await api(`/admin/orders/${id}/force-complete`,{method:'POST'});toast('Đã cập nhật','success');loadOrders();}catch(e){toast(e.message,'error');}}
+async function fCancel(id){if(!confirm('Hủy đơn và hoàn tiền?'))return;try{await api(`/admin/orders/${id}/force-cancel`,{method:'POST'});toast('Đã hủy và hoàn tiền','success');loadOrders();}catch(e){toast(e.message,'error');}}
+async function fRefill(id){try{await api(`/admin/orders/${id}/refill`,{method:'POST'});toast('Đã gửi refill','success');}catch(e){toast(e.message,'error');}}
+
+async function loadUsers(p){
+  if(p)pg.users=p;const lm=20;
+  const q=new URLSearchParams({page:pg.users,limit:lm,search:document.getElementById('usrSrch').value,role:document.getElementById('usrRole').value,is_banned:document.getElementById('usrBan').value,sortBy:document.getElementById('usrSort').value,sortDir:'DESC'}).toString();
+  document.getElementById('usrTb').innerHTML='<tr class="lr"><td colspan="10"><div class="sp"></div></td></tr>';
+  try{
+    const d=await api(`/admin/users?${q}`);
+    const usrRows=Array.isArray(d.data)?d.data:(d.data?.rows||[]);
+    const usrTotal=d.total||usrRows.length;
+    if(!usrRows.length){document.getElementById('usrTb').innerHTML='<tr class="er"><td colspan="10">Không có user</td></tr>';return;}
+    document.getElementById('usrTb').innerHTML=usrRows.map(u=>`<tr>
+      <td class="mn" style="color:var(--text3)">${u.id}</td>
+      <td><div class="mn" style="font-size:12px;color:var(--accent)">@${u.username||'—'}</div><div style="font-size:10px;color:var(--text3)">${u.telegram_id}</div></td>
+      <td>${u.first_name||'—'}</td><td class="vnd">${fv(u.balance)}</td><td class="vnd">${fv(u.total_spent)}</td><td class="mn">${fn(u.total_orders)}</td>
+      <td><span class="badge ${u.role==='admin'?'b-ng':u.role==='reseller'?'b-pu':'b-in'}">${u.role}</span></td>
+      <td>${u.is_banned?'<span class="badge b-ng">Bị cấm</span>':'<span class="badge b-ok">OK</span>'}</td>
+      <td style="font-size:11px;color:var(--text3)">${fd(u.created_at)}</td>
+      <td><div style="display:flex;gap:4px;flex-wrap:wrap">
+        <button class="btn btn-s sm" onclick="viewUser(${u.id})">👁</button>
+        <button class="btn btn-g sm" onclick="openBalMo(${u.id},'${(u.first_name||u.username||u.id).toString().replace(/'/g,'')}')">💰</button>
+        <button class="btn ${u.is_banned?'btn-ok':'btn-d'} sm" onclick="tglBan(${u.id})">${u.is_banned?'Bỏ cấm':'Cấm'}</button>
+        <button class="btn btn-g sm" onclick="openRoleMo(${u.id},'${u.role}',${u.profit_percent||0})">Role</button>
+      </div></td>
+    </tr>`).join('');
+    renderPag('usrPag',pg.users,Math.ceil(usrTotal/lm),usrTotal,loadUsers);
+  }catch(e){toast(e.message,'error');}
+}
+async function viewUser(id){
+  try{
+    const d=await api(`/admin/users/${id}`);const{user,orders,transactions}=d.data;
+    const sc={Completed:'b-ok','In progress':'b-in',Pending:'b-wa',Canceled:'b-se',Failed:'b-ng',Partial:'b-wa'};
+    document.getElementById('moUDT').textContent=`Chi tiết: ${user.first_name||user.username||'User #'+user.id}`;
+    document.getElementById('moUDB').innerHTML=`
+      <div class="udh"><div class="uda">${(user.first_name||user.username||'U')[0].toUpperCase()}</div><div style="flex:1"><div class="udn">${user.first_name||'—'}${user.username?' @'+user.username:''}</div><div class="udm">TG: ${user.telegram_id} · Role: ${user.role}${user.is_banned?' · ⛔ Bị cấm':''}</div><div class="uds"><div class="udst"><div class="udsv" style="color:var(--green)">${fv(user.balance)}</div><div class="udsl">Số dư</div></div><div class="udst"><div class="udsv">${fn(user.total_orders)}</div><div class="udsl">Đơn hàng</div></div><div class="udst"><div class="udsv" style="color:var(--accent)">${fv(user.total_spent)}</div><div class="udsl">Đã chi</div></div></div></div></div>
+      <div class="fgl">📦 10 đơn gần nhất</div>
+      <div style="overflow-x:auto;margin-bottom:20px"><table><thead><tr><th>ID</th><th>Dịch vụ</th><th>SL</th><th>Chi phí</th><th>TT</th><th>Ngày</th></tr></thead><tbody>${orders.length?orders.map(o=>`<tr><td class="mn" style="color:var(--accent)">#${o.id}</td><td style="font-size:12px">${(o.service?.name||'—').substring(0,40)}</td><td class="mn">${fn(o.quantity)}</td><td class="vnd">${fv(o.charge)}</td><td><span class="badge ${sc[o.status]||'b-se'}" style="font-size:9px">${o.status}</span></td><td style="font-size:11px;color:var(--text3)">${fd(o.created_at)}</td></tr>`).join(''):'<tr><td colspan="6" style="text-align:center;color:var(--text3);padding:12px">Chưa có đơn</td></tr>'}</tbody></table></div>
+      <div class="fgl">💳 10 giao dịch gần nhất</div>
+      <div style="overflow-x:auto"><table><thead><tr><th>ID</th><th>Loại</th><th>Số tiền</th><th>Số dư sau</th><th>Ngày</th></tr></thead><tbody>${transactions.length?transactions.map(t=>`<tr><td class="mn">#${t.id}</td><td><span class="badge badge-${t.type==='deposit'?'b-ok':t.type==='refund'?'b-wa':'b-in'}" style="font-size:9px">${t.type}</span></td><td class="mn" style="color:${t.amount>=0?'var(--green)':'var(--red)'}">${t.amount>=0?'+':''}${fv(t.amount)}</td><td class="vnd">${fv(t.balance_after)}</td><td style="font-size:11px;color:var(--text3)">${fd(t.created_at)}</td></tr>`).join(''):'<tr><td colspan="5" style="text-align:center;color:var(--text3);padding:12px">Chưa có giao dịch</td></tr>'}</tbody></table></div>`;
+    omo('moUD');
+  }catch(e){toast(e.message,'error');}
+}
+async function tglBan(id){try{const d=await api(`/admin/users/${id}/ban`,{method:'POST'});toast(`Đã ${d.is_banned?'cấm':'bỏ cấm'} user`,'success');loadUsers();}catch(e){toast(e.message,'error');}}
+function openBalMo(id,n){uaData={type:'balance',id};document.getElementById('moUT').textContent=`💰 Điều chỉnh số dư — ${n}`;document.getElementById('moUB').innerHTML=`<div class="fl"><label class="flbl">Số tiền (âm=trừ, dương=cộng)</label><input type="number" class="finp" id="balAmt" placeholder="VD: 100000"></div><div class="fl"><label class="flbl">Ghi chú</label><input type="text" class="finp" id="balDesc" placeholder="Admin điều chỉnh..."></div>`;omo('moUser');}
+function openRoleMo(id,role,profit){uaData={type:'role',id};document.getElementById('moUT').textContent='Cập nhật Role User';document.getElementById('moUB').innerHTML=`<div class="fl"><label class="flbl">Role</label><select class="fsel" id="roleSel"><option value="user" ${role==='user'?'selected':''}>User</option><option value="reseller" ${role==='reseller'?'selected':''}>Reseller</option><option value="admin" ${role==='admin'?'selected':''}>Admin</option></select></div><div class="fl"><label class="flbl">Profit % riêng (Reseller)</label><input type="number" class="finp" id="roleP" value="${profit}" min="0" max="1000" step="0.5"></div>`;omo('moUser');}
+async function saveUA(){
+  try{
+    if(uaData.type==='balance'){const amt=parseFloat(document.getElementById('balAmt').value);if(isNaN(amt)){toast('Nhập số tiền hợp lệ','error');return;}await api(`/admin/users/${uaData.id}/balance`,{method:'POST',body:{amount:amt,description:document.getElementById('balDesc').value}});toast('Đã cập nhật số dư','success');}
+    else if(uaData.type==='role'){await api(`/admin/users/${uaData.id}/role`,{method:'PATCH',body:{role:document.getElementById('roleSel').value,profit_percent:parseFloat(document.getElementById('roleP').value)||0}});toast('Đã cập nhật role','success');}
+    cmo('moUser');loadUsers();
+  }catch(e){toast(e.message,'error');}
+}
+
+async function loadServices(p){
+  if(p)pg.services=p;const lm=50;
+  const q=new URLSearchParams({page:pg.services,limit:lm,search:document.getElementById('svcSrch').value,platform:document.getElementById('svcPlatf').value,is_active:document.getElementById('svcAct').value}).toString();
+  document.getElementById('svcTb').innerHTML='<tr class="lr"><td colspan="10"><div class="sp"></div></td></tr>';
+  try{
+    const d=await api(`/admin/services?${q}`);
+    const rows=Array.isArray(d.data)?d.data:(d.data?.rows||d.rows||[]);
+    const totalCount=d.total||d.count||rows.length;
+    if(d.platforms?.length){const pf=document.getElementById('svcPlatf'),cur=pf.value;pf.innerHTML='<option value="">Tất cả Platform</option>'+d.platforms.map(pl=>`<option value="${pl}" ${pl===cur?'selected':''}>${pl}</option>`).join('');const bp=document.getElementById('bkPlatf');bp.innerHTML='<option value="">Tất cả platform</option>'+d.platforms.map(pl=>`<option value="${pl}">${pl}</option>`).join('');}
+    if(!rows.length){document.getElementById('svcTb').innerHTML='<tr class="er"><td colspan="10">Không có service (total='+totalCount+')</td></tr>';return;}
+    document.getElementById('svcTb').innerHTML=rows.map(s=>`<tr>
+      <td class="mn" style="color:var(--text3)">${s.id}</td>
+      <td><span class="badge b-in" style="font-size:10px">${s.platform}</span></td>
+      <td><div style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px" title="${s.name}">${s.name}</div><div style="font-size:10px;color:var(--text3)">${s.category}</div></td>
+      <td style="font-size:11px;color:var(--text3)">${s.type}</td>
+      <td class="vnd" style="font-size:11px">${fv(s.rate_provider)}/1k</td>
+      <td class="mn" style="font-size:11px;color:var(--orange)">${s.profit_percent>0?s.profit_percent+'%':'def'}</td>
+      <td class="vnd" style="font-size:11px;font-weight:600">${(()=>{const sell=s.custom_rate?parseFloat(s.custom_rate):Math.ceil(parseFloat(s.rate_provider||0)*(1+(parseFloat(s.profit_percent)||30)/100));return fv(sell)+'/1k';})()} </td>
+      <td style="font-size:11px" class="mn">${fn(s.min)}–${fn(s.max)}</td>
+      <td><label class="tgl"><input type="checkbox" ${s.is_active?'checked':''} onchange="qToggleSvc(${s.id},this.checked)"><div class="tsl"></div></label></td>
+      <td><button class="btn btn-g sm" onclick="openSvcMo(${s.id})">✎</button></td>
+    </tr>`).join('');
+    renderPag('svcPag',pg.services,Math.ceil(totalCount/lm),totalCount,loadServices);
+  }catch(e){toast(e.message,'error');}
+}
+async function qToggleSvc(id,v){try{await api(`/admin/services/${id}`,{method:'PATCH',body:{is_active:v}});toast(`Service ${v?'bật':'tắt'}`,'success');}catch(e){toast(e.message,'error');loadServices();}}
+async function openSvcMo(id){
+  svcEId=id;
+  try{const d=await api(`/admin/services?page=1&limit=5000`);const s=d.data.find(x=>x.id===id);if(!s){toast('Không tìm thấy service','error');return;}
+  document.getElementById('svName').value=s.name;document.getElementById('svProfit').value=s.profit_percent||0;document.getElementById('svCustom').value=s.custom_rate||'';document.getElementById('svSort').value=s.sort_order||0;document.getElementById('svAct').checked=!!s.is_active;omo('moSvc');}catch(e){toast(e.message,'error');}
+}
+async function saveSvc(){if(!svcEId)return;try{await api(`/admin/services/${svcEId}`,{method:'PATCH',body:{name:document.getElementById('svName').value,profit_percent:parseFloat(document.getElementById('svProfit').value)||0,custom_rate:document.getElementById('svCustom').value||null,sort_order:parseInt(document.getElementById('svSort').value)||0,is_active:document.getElementById('svAct').checked}});toast('Đã lưu service','success');cmo('moSvc');loadServices();}catch(e){toast(e.message,'error');}}
+async function syncAll(e){const b=e.target.closest('button');b.disabled=true;b.textContent='↻ Syncing…';try{const d=await api('/admin/providers');for(const p of d.data)await api(`/admin/providers/${p.id}/sync`,{method:'POST'});toast('Đã sync tất cả providers','success');loadServices();}catch(e){toast(e.message,'error');}b.disabled=false;b.textContent='↻ Sync tất cả';}
+function openBulkMo(){document.getElementById('bkActOvr').checked=false;document.getElementById('bkActRow').style.display='none';omo('moBulk');}
+async function saveBulk(){
+  const platf=document.getElementById('bkPlatf').value,prof=document.getElementById('bkProfit').value,cust=document.getElementById('bkCustom').value,ovr=document.getElementById('bkActOvr').checked;
+  try{const d=await api(`/admin/services?limit=10000${platf?'&platform='+platf:''}`);const ids=d.data.map(s=>s.id);if(!ids.length){toast('Không có service để update','warning');return;}
+  const upd={};if(prof!=='')upd.profit_percent=parseFloat(prof);if(cust!=='')upd.custom_rate=parseFloat(cust)||null;if(ovr)upd.is_active=document.getElementById('bkAct').checked;
+  if(!Object.keys(upd).length){toast('Chưa nhập giá trị nào','warning');return;}
+  await api('/admin/services/bulk-update',{method:'POST',body:{ids,updates:upd}});toast(`Đã cập nhật ${ids.length} services`,'success');cmo('moBulk');loadServices();}catch(e){toast(e.message,'error');}
+}
+
+async function loadProviders(){
+  document.getElementById('pvGrid').innerHTML='<div class="fc" style="height:120px;grid-column:1/-1"><div class="sp"></div></div>';
+  try{
+    const d=await api('/admin/providers');
+    document.getElementById('pvGrid').innerHTML=d.data.length?d.data.map(p=>`
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:20px;transition:var(--tr)" onmouseover="this.style.borderColor='var(--border2)'" onmouseout="this.style.borderColor='var(--border)'">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px"><div><div style="font-size:16px;font-weight:700">${p.name}</div><div style="font-size:11px;color:var(--text3);font-family:var(--fm);margin-top:2px">${p.api_url}</div></div><span class="badge ${p.status==='active'?'b-ok':'b-se'}">${p.status}</span></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px">
+          <div style="background:var(--bg2);border-radius:var(--rs);padding:10px"><div style="font-size:10px;color:var(--text3);text-transform:uppercase;margin-bottom:3px">Số dư</div><div class="vnd" style="font-size:14px;font-weight:700">${Number(p.balance||0).toFixed(4)} ${p.currency}</div></div>
+          <div style="background:var(--bg2);border-radius:var(--rs);padding:10px"><div style="font-size:10px;color:var(--text3);text-transform:uppercase;margin-bottom:3px">Tỷ giá</div><div style="font-size:12px;font-family:var(--fm)">${fn(p.exchange_rate)} VND/${p.currency}</div></div>
+          <div style="background:var(--bg2);border-radius:var(--rs);padding:10px"><div style="font-size:10px;color:var(--text3);text-transform:uppercase;margin-bottom:3px">Priority</div><div style="font-size:14px;font-weight:600">#${p.priority}</div></div>
+          <div style="background:var(--bg2);border-radius:var(--rs);padding:10px"><div style="font-size:10px;color:var(--text3);text-transform:uppercase;margin-bottom:3px">Profit %</div><div style="font-size:14px;font-weight:600;color:var(--orange)">${p.profit_percent>0?p.profit_percent+'%':'Dùng default'}</div></div>
+          <div style="background:var(--bg2);border-radius:var(--rs);padding:10px;grid-column:span 2"><div style="font-size:10px;color:var(--text3);text-transform:uppercase;margin-bottom:3px">Sync cuối</div><div style="font-size:11px;color:var(--text2)">${p.last_sync_at?fd(p.last_sync_at):'Chưa sync'}</div></div>
+        </div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn btn-p sm" onclick="syncPv(${p.id},this)">↻ Sync</button><button class="btn btn-g sm" onclick="pvBal(${p.id},this)">💰 Balance</button><button class="btn btn-s sm" onclick="openPvMo(${p.id})">✎ Sửa</button><button class="btn btn-d sm" onclick="delPv(${p.id})">✕</button></div>
+      </div>`).join(''):'<div style="color:var(--text3);padding:40px;text-align:center;grid-column:1/-1">Chưa có provider</div>';
+  }catch(e){toast(e.message,'error');}
+}
+async function syncPv(id,btn){btn.disabled=true;btn.textContent='Syncing…';try{const d=await api(`/admin/providers/${id}/sync`,{method:'POST'});toast(`Sync OK: ${d.data?.synced||0} services`,'success');loadProviders();}catch(e){toast(e.message,'error');}btn.disabled=false;btn.textContent='↻ Sync';}
+async function pvBal(id,btn){btn.disabled=true;try{const d=await api(`/admin/providers/${id}/balance`);toast(`Balance: ${d.data?.balance} ${d.data?.currency||''}`,'info');loadProviders();}catch(e){toast(e.message,'error');}btn.disabled=false;btn.textContent='💰 Balance';}
+async function delPv(id){if(!confirm('Xóa provider? Sẽ xóa cả services liên quan!'))return;try{await api(`/admin/providers/${id}`,{method:'DELETE'});toast('Đã xóa provider','success');loadProviders();}catch(e){toast(e.message,'error');}}
+async function openPvMo(id=null){
+  editPv=id;
+  document.getElementById('moPvT').textContent=id?'Sửa Provider':'Thêm Provider';
+  if(!id){
+    ['pvName','pvUrl','pvKey'].forEach(x=>document.getElementById(x).value='');
+    document.getElementById('pvRate').value='25000';
+    document.getElementById('pvPri').value='1';
+    document.getElementById('pvCur').value='USD';
+    document.getElementById('pvStat').value='active';
+    document.getElementById('pvProfit').value='0';
+  } else {
+    try {
+      const d=await api('/admin/providers');
+      const p=d.data.find(x=>x.id===id);
+      if(!p){toast('Không tìm thấy provider','error');return;}
+      document.getElementById('pvName').value=p.name||'';
+      document.getElementById('pvUrl').value=p.api_url||'';
+      document.getElementById('pvKey').value=p.api_key||'';
+      document.getElementById('pvRate').value=p.exchange_rate||25000;
+      document.getElementById('pvPri').value=p.priority||1;
+      document.getElementById('pvCur').value=p.currency||'USD';
+      document.getElementById('pvStat').value=p.status||'active';
+      document.getElementById('pvProfit').value=p.profit_percent||0;
+    } catch(e){toast(e.message,'error');return;}
+  }
+  omo('moPv');
+}
+async function savePv(){
+  const body={name:document.getElementById('pvName').value,api_url:document.getElementById('pvUrl').value,api_key:document.getElementById('pvKey').value,currency:document.getElementById('pvCur').value,exchange_rate:parseFloat(document.getElementById('pvRate').value),priority:parseInt(document.getElementById('pvPri').value),status:document.getElementById('pvStat').value,profit_percent:parseFloat(document.getElementById('pvProfit').value)||0};
+  try{if(editPv)await api(`/admin/providers/${editPv}`,{method:'PUT',body});else await api('/admin/providers',{method:'POST',body});toast('Đã lưu provider','success');cmo('moPv');loadProviders();}catch(e){toast(e.message,'error');}
+}
+
+async function loadTx(p){
+  if(p)pg.tx=p;const lm=20;
+  const q=new URLSearchParams({page:pg.tx,limit:lm,type:document.getElementById('txType').value,dateFrom:document.getElementById('txFrom').value,dateTo:document.getElementById('txTo').value}).toString();
+  document.getElementById('txTb').innerHTML='<tr class="lr"><td colspan="7"><div class="sp"></div></td></tr>';
+  try{
+    const d=await api(`/admin/transactions?${q}`);
+    const tc={deposit:'b-ok',order:'b-in',refund:'b-wa',admin_adjust:'b-pu'};
+    const txRows=Array.isArray(d.data)?d.data:(d.data?.rows||[]);
+    const txTotal=d.total||txRows.length;
+    if(!txRows.length){document.getElementById('txTb').innerHTML='<tr class="er"><td colspan="7">Không có giao dịch</td></tr>';return;}
+    document.getElementById('txTb').innerHTML=txRows.map(t=>`<tr>
+      <td class="mn" style="color:var(--text3)">#${t.id}</td>
+      <td style="font-size:12px">@${t.user?.username||t.user?.first_name||'—'}<div style="font-size:10px;color:var(--text3)">${t.user?.telegram_id||''}</div></td>
+      <td><span class="badge ${tc[t.type]||'b-se'}">${t.type}</span></td>
+      <td class="mn" style="color:${t.amount>=0?'var(--green)':'var(--red)'};font-weight:600">${t.amount>=0?'+':''}${fv(t.amount)}</td>
+      <td class="vnd">${fv(t.balance_after)}</td>
+      <td class="trunc tm" style="max-width:180px;font-size:12px">${t.description||'—'}</td>
+      <td style="font-size:11px;color:var(--text3)">${fd(t.created_at)}</td>
+    </tr>`).join('');
+    renderPag('txPag',pg.tx,Math.ceil(txTotal/lm),txTotal,loadTx);
+  }catch(e){toast(e.message,'error');}
+}
+
+async function loadCoupons(){
+  document.getElementById('cpTb').innerHTML='<tr class="lr"><td colspan="8"><div class="sp"></div></td></tr>';
+  try{
+    const d=await api('/admin/coupons');
+    if(!d.data.length){document.getElementById('cpTb').innerHTML='<tr class="er"><td colspan="8">Chưa có coupon</td></tr>';return;}
+    document.getElementById('cpTb').innerHTML=d.data.map(c=>{
+      const bonusDesc=c.type==='percent'?`<b style="color:var(--green)">+${c.value}%</b> số tiền nạp`:`<b style="color:var(--green)">+${fv(c.value)}</b> cố định`;
+      const usedPct=c.max_uses>0?Math.round(c.used_count/c.max_uses*100):0;
+      return`<tr>
+        <td>
+          <div class="mn" style="font-weight:700;color:var(--orange);font-size:14px">${c.code}</div>
+          <div style="font-size:10px;color:var(--text3);margin-top:2px">Nhập vào nội dung CK</div>
+        </td>
+        <td><span class="badge ${c.type==='percent'?'b-pu':'b-in'}">${c.type==='percent'?'Phần trăm':'Cố định'}</span></td>
+        <td style="font-size:12px">${bonusDesc}</td>
+        <td>
+          <div class="mn">${c.used_count}/${c.max_uses}</div>
+          <div style="background:var(--bg3);border-radius:4px;height:4px;margin-top:4px;width:60px"><div style="background:${usedPct>=80?'var(--red)':'var(--accent)'};height:4px;border-radius:4px;width:${usedPct}%"></div></div>
+        </td>
+        <td class="vnd">${parseFloat(c.min_deposit)>0?fv(c.min_deposit):'<span style="color:var(--text3)">Không giới hạn</span>'}</td>
+        <td style="font-size:11px;color:var(--text3)">${c.expires_at?fd(c.expires_at):'∞ Không hết hạn'}</td>
+        <td>${c.is_active?'<span class="badge b-ok">Active</span>':'<span class="badge b-se">Tắt</span>'}</td>
+        <td><div style="display:flex;gap:6px"><button class="btn btn-g sm" onclick="tglCp(${c.id},${!c.is_active})">${c.is_active?'Tắt':'Bật'}</button><button class="btn btn-d sm" onclick="delCp(${c.id})">✕</button></div></td>
+      </tr>`;}).join('');
+  }catch(e){toast(e.message,'error');}
+}
+const openCpMo=()=>omo('moCp');
+async function saveCp(){const code=document.getElementById('cpCode').value.toUpperCase().trim();if(!code){toast('Nhập mã code','error');return;}try{await api('/admin/coupons',{method:'POST',body:{code,type:document.getElementById('cpType').value,value:parseFloat(document.getElementById('cpVal').value)||0,max_uses:parseInt(document.getElementById('cpMax').value)||1,min_deposit:parseFloat(document.getElementById('cpMin').value)||0,expires_at:document.getElementById('cpExp').value||null}});toast('Tạo coupon thành công','success');cmo('moCp');loadCoupons();}catch(e){toast(e.message,'error');}}
+async function tglCp(id,v){try{await api(`/admin/coupons/${id}`,{method:'PUT',body:{is_active:v}});toast('Cập nhật coupon','success');loadCoupons();}catch(e){toast(e.message,'error');}}
+async function delCp(id){if(!confirm('Xóa coupon?'))return;try{await api(`/admin/coupons/${id}`,{method:'DELETE'});toast('Đã xóa coupon','success');loadCoupons();}catch(e){toast(e.message,'error');}}
+
+document.querySelectorAll('.bto').forEach(el=>el.addEventListener('click',()=>{document.querySelectorAll('.bto').forEach(x=>x.classList.remove('sel'));el.classList.add('sel');el.querySelector('input').checked=true;}));
+
+// ── Auto Broadcast ──
+async function loadAbStatus(){
+  try{
+    const d=await api('/admin/auto-broadcast/status');const s=d.data;
+    const jobs=s.jobs||[];
+    const mJob=jobs.find(j=>j.name==='broadcast-morning');
+    const eJob=jobs.find(j=>j.name==='broadcast-evening');
+    document.getElementById('abStatus').innerHTML=`
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+        <div style="width:8px;height:8px;border-radius:50%;background:${s.groqConfigured?'var(--green)':'var(--red)'}"></div>
+        <span style="font-size:13px;font-weight:600">Groq AI: ${s.groqConfigured?'<span style="color:var(--green)">Đã cấu hình ✅</span>':'<span style="color:var(--red)">Chưa có GROQ_API_KEY ❌</span>'}</span>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <div style="background:var(--bg3);border-radius:var(--rs);padding:10px">
+          <div style="font-size:10px;color:var(--text3);margin-bottom:4px">BUỔI SÁNG</div>
+          <div style="font-size:14px;font-weight:700;color:var(--orange)">⏰ ${mJob?String(mJob.hour).padStart(2,'0')+':00':'—'}</div>
+          <div style="font-size:11px;color:var(--text3);margin-top:2px">Target: ${s.morningTarget}</div>
+        </div>
+        <div style="background:var(--bg3);border-radius:var(--rs);padding:10px">
+          <div style="font-size:10px;color:var(--text3);margin-bottom:4px">BUỔI TỐI</div>
+          <div style="font-size:14px;font-weight:700;color:var(--purple)">⏰ ${eJob?String(eJob.hour).padStart(2,'0')+':00':'—'}</div>
+          <div style="font-size:11px;color:var(--text3);margin-top:2px">Target: ${s.eveningTarget}</div>
+        </div>
+      </div>
+      ${!s.groqConfigured?'<div style="margin-top:10px;padding:8px 12px;background:var(--orange-dim);border-radius:var(--rs);font-size:12px;color:var(--orange)">⚠️ Thêm GROQ_API_KEY vào .env — lấy miễn phí tại <a href="https://console.groq.com" target="_blank" style="color:var(--accent)">console.groq.com</a></div>':''}
+    `;
+    // Set select values
+    if(mJob){document.getElementById('abMorningH').value=mJob.hour;}
+    if(eJob){document.getElementById('abEveningH').value=eJob.hour;}
+    document.getElementById('abMorningT').value=s.morningTarget||'all';
+    document.getElementById('abEveningT').value=s.eveningTarget||'all';
+  }catch(e){document.getElementById('abStatus').innerHTML=`<div style="color:var(--red);font-size:13px">❌ ${e.message}</div>`;}
+}
+
+async function saveAbConfig(){
+  try{
+    await api('/admin/auto-broadcast/config',{method:'POST',body:{
+      morningHour:document.getElementById('abMorningH').value,
+      eveningHour:document.getElementById('abEveningH').value,
+      morningTarget:document.getElementById('abMorningT').value,
+      eveningTarget:document.getElementById('abEveningT').value,
+    }});
+    toast('Đã lưu lịch broadcast AI','success');
+    loadAbStatus();
+  }catch(e){toast(e.message,'error');}
+}
+
+async function previewAiMsg(timeOfDay){
+  const box=document.getElementById('abPrevBox');
+  const content=document.getElementById('abPrevContent');
+  box.style.display='';content.textContent='⏳ AI đang sinh nội dung...';
+  try{
+    const d=await api(`/admin/auto-broadcast/preview?timeOfDay=${timeOfDay}`);
+    content.textContent=d.data.message;
+    toast('AI đã sinh nội dung mới','success');
+  }catch(e){content.textContent='❌ '+e.message;toast(e.message,'error');}
+}
+
+function copyAiMsg(){
+  const txt=document.getElementById('abPrevContent').textContent;
+  navigator.clipboard?.writeText(txt).then(()=>toast('Đã copy','success')).catch(()=>toast('Copy thất bại','error'));
+}
+
+async function triggerAiBroadcast(){
+  if(!confirm('Xác nhận gửi AI broadcast ngay?'))return;
+  const btn=document.getElementById('abTriggerBtn');btn.disabled=true;btn.textContent='⏳ Đang gửi...';
+  try{
+    await api('/admin/auto-broadcast/trigger',{method:'POST',body:{
+      timeOfDay:document.getElementById('abTriggerTime').value,
+      target:document.getElementById('abTriggerTarget').value,
+    }});
+    toast('Đã kích hoạt AI broadcast! Kiểm tra Telegram','success');
+  }catch(e){toast(e.message,'error');}
+  btn.disabled=false;btn.textContent='🤖 Gửi AI broadcast ngay';
+}
+
+async function bcPreview(){const tgt=document.querySelector('input[name="btr"]:checked')?.value||'all';try{const d=await api('/admin/broadcast',{method:'POST',body:{message:document.getElementById('bcMsg').value||'test',target:tgt,preview:true}});document.getElementById('bcPrevC').innerHTML=`<div style="font-size:13px;margin-bottom:8px">Sẽ gửi đến khoảng <strong style="color:var(--accent)">${d.data.count}+</strong> người dùng</div><div style="font-size:11px;color:var(--text3)">Mẫu: ${d.data.users.map(u=>'@'+(u.username||u.first_name||u.telegram_id)).join(', ')}</div>`;document.getElementById('bcPrevBox').style.display='';}catch(e){toast(e.message,'error');}}
+async function doBroadcast(){const msg=document.getElementById('bcMsg').value.trim();if(!msg){toast('Nhập nội dung','error');return;}const tgt=document.querySelector('input[name="btr"]:checked')?.value||'all';if(!confirm(`Xác nhận gửi broadcast đến: ${tgt}?`))return;const b=document.getElementById('bcBtn');b.disabled=true;b.textContent='⏳ Đang gửi…';try{const d=await api('/admin/broadcast',{method:'POST',body:{message:msg,target:tgt}});toast(`Đã gửi ${d.data.sent}/${d.data.total} tin (${d.data.failed} lỗi)`,'success');document.getElementById('bcMsg').value='';}catch(e){toast(e.message,'error');}b.disabled=false;b.textContent='✈ Gửi Broadcast';}
+
+async function loadSettings(){try{const d=await api('/admin/settings');document.getElementById('sPct').value=d.data.DEFAULT_PROFIT_PERCENT;document.getElementById('sRate').value=d.data.USD_TO_VND;document.getElementById('sAcc').value=d.data.SEPAY_BANK_ACCOUNT||'';document.getElementById('sBank').value=d.data.SEPAY_BANK_NAME||'';loadHealth();}catch(e){toast(e.message,'error');}}
+async function saveSettings(){try{await api('/admin/settings',{method:'POST',body:{DEFAULT_PROFIT_PERCENT:document.getElementById('sPct').value,USD_TO_VND:document.getElementById('sRate').value,SEPAY_BANK_ACCOUNT:document.getElementById('sAcc').value,SEPAY_BANK_NAME:document.getElementById('sBank').value}});toast('Đã lưu cài đặt (runtime)','success');}catch(e){toast(e.message,'error');}}
+
+function renderPag(cid,cur,total,count,loadFn){
+  const c=document.getElementById(cid);if(total<=1){c.innerHTML='';return;}
+  const s=Math.max(1,cur-2),e=Math.min(total,cur+2);const pgs=[];for(let i=s;i<=e;i++)pgs.push(i);
+  c.innerHTML=`<div class="pi">Tổng <strong>${fn(count)}</strong> — trang ${cur}/${total}</div><div class="pb"><button class="pgb" onclick="${loadFn.name}(1)" ${cur===1?'disabled':''}>«</button><button class="pgb" onclick="${loadFn.name}(${cur-1})" ${cur===1?'disabled':''}>‹</button>${pgs.map(p=>`<button class="pgb ${p===cur?'active':''}" onclick="${loadFn.name}(${p})">${p}</button>`).join('')}<button class="pgb" onclick="${loadFn.name}(${cur+1})" ${cur===total?'disabled':''}>›</button><button class="pgb" onclick="${loadFn.name}(${total})" ${cur===total?'disabled':''}>»</button></div>`;
+}
+
+window.addEventListener('keydown',e=>{if(e.key==='Escape')document.querySelectorAll('.mo.open').forEach(m=>m.classList.remove('open'));});
+
+// ── Provider Sync Management ──
+async function loadSyncStatus(){
+  const sel=document.getElementById('syncHourSel');
+  try{
+    const d=await api('/admin/providers/sync-status');const s=d.data;
+    const badge=document.getElementById('syncStatusBadge');
+    let nextTxt='';
+    if(s.nextRunIn){const h=Math.floor(s.nextRunIn/3600000),m=Math.floor((s.nextRunIn%3600000)/60000);nextTxt=` · còn ${h}h ${m}m`;}
+    badge.innerHTML=`
+      <div style="width:8px;height:8px;border-radius:50%;background:${s.scheduled?'var(--green)':'var(--red)'}"></div>
+      <span style="font-size:13px;color:var(--text2)">${s.scheduled?'<b style="color:var(--green)">Đang chạy ✅</b>':'<span style="color:var(--red)">Chưa lên lịch ❌</span>'} — mỗi ngày lúc <b>${String(s.hour).padStart(2,'0')}:00</b> VN${nextTxt}</span>
+    `;
+    if(sel)sel.value=s.hour;
+  }catch(e){document.getElementById('syncStatusBadge').innerHTML=`<span style="color:var(--red);font-size:13px">❌ ${e.message}</span>`;}
+}
+
+async function saveSyncConfig(){
+  const h=document.getElementById('syncHourSel').value;
+  try{await api('/admin/providers/sync-config',{method:'POST',body:{hour:h}});toast(`Đã đặt auto sync lúc ${String(h).padStart(2,'0')}:00 VN`,'success');loadSyncStatus();}
+  catch(e){toast(e.message,'error');}
+}
+
+async function triggerSyncNow(btn){
+  if(!confirm('Sync tất cả providers ngay bây giờ?'))return;
+  btn.disabled=true;btn.textContent='⏳ Đang sync...';
+  try{
+    await api('/admin/providers/sync-now',{method:'POST'});
+    toast('Đang sync providers... Xem logs để theo dõi','info');
+    setTimeout(()=>loadProviders(),3000);
+  }catch(e){toast(e.message,'error');}
+  btn.disabled=false;btn.textContent='⚡ Sync ngay';
+}
+if(token)showApp();
+</script>
+</body>
+</html>
